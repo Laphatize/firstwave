@@ -13,6 +13,7 @@ import { UserRound, UsersRound, Building } from 'lucide-react'
 import { Home, BarChart2, Settings, Droplet, Heart, View } from 'lucide-react'
 import FormModal from '@/components/core/FormModal'; // You'll need to create this component
 import { Lock } from 'lucide-react';
+import { toast } from 'react-hot-toast'; // You'll need to install this package
 
 const phishingTests = [
     {
@@ -96,6 +97,7 @@ const PhishingTests = () => {
     const [isTyping, setIsTyping] = useState(true);
     const [estimatedDuration, setEstimatedDuration] = useState({ min: 24, max: 48 });
     const [projectedCost, setProjectedCost] = useState(1200);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     
     const placeholders = [
         "Example: Please avoid testing our C-suite executives...",
@@ -136,7 +138,7 @@ const PhishingTests = () => {
                 currentIndex = 0;
             }
 
-        }, 50); // Adjust speed here (lower = faster)
+        }, 50); // Adjust szpeed here (lower = faster)
 
         return () => clearInterval(typewriter);
     }, [placeholderIndex]);
@@ -166,7 +168,15 @@ const PhishingTests = () => {
     };
 
     const openModal = () => setIsModalOpen(true);
-    const closeModal = () => setIsModalOpen(false);
+    const closeModal = () => {
+        setIsModalOpen(false);
+        // Only deselect if the form is empty
+        if (isFormEmpty()) {
+            setSelectedOption(null);
+            setEmployees([{ name: '', email: '' }]);
+            setSelectedFile(null);
+        }
+    };
 
     const togglePermission = (index) => {
         const newPermissions = permissions.map((p, i) => i === index ? !p : p);
@@ -213,9 +223,10 @@ const PhishingTests = () => {
                                 Cancel
                             </p>
                             <button 
+                                onClick={() => setIsModalOpen(false)}
                                 className="px-4 py-2 bg-neutral-900 text-white rounded hover:bg-neutral-700"
                             >
-                                Create Campaign
+                                OK
                             </button>
                         </div>
                     </div>
@@ -283,9 +294,10 @@ const PhishingTests = () => {
                                 Cancel
                             </p>
                             <button 
+                                onClick={() => setIsModalOpen(false)}
                                 className="px-4 py-2 bg-neutral-900 text-white rounded hover:bg-neutral-700"
                             >
-                                Create Campaign
+                                OK
                             </button>
                         </div>
                     </div>
@@ -371,9 +383,10 @@ const PhishingTests = () => {
                                 Cancel
                             </p>
                             <button 
+                                onClick={() => setIsModalOpen(false)}
                                 className="px-4 py-2 bg-neutral-900 text-white rounded hover:bg-neutral-700"
                             >
-                                Create Campaign
+                                OK
                             </button>
                         </div>
                     </div>
@@ -524,6 +537,112 @@ const PhishingTests = () => {
         // Update state
         setEstimatedDuration(baseDuration);
         setProjectedCost(baseCost);
+    };
+
+    const isFormEmpty = () => {
+        switch(selectedOption) {
+            case 'single':
+                // Check if both name and email fields are empty
+                return !employees[0].name && !employees[0].email;
+            case 'group':
+                // Check if all employees are empty or if there's only one empty employee
+                return employees.length === 1 && !employees[0].name && !employees[0].email;
+            case 'firmwide':
+                // Check if no file is selected and no employees are loaded
+                return !selectedFile && (employees.length === 1 && !employees[0].name && !employees[0].email);
+            default:
+                return true;
+        }
+    };
+
+    const validateCampaign = () => {
+        if (!selectedOption) {
+            toast.error('Please select a campaign type');
+            return false;
+        }
+
+        // Validate permissions
+        if (!permissions.some(p => p)) {
+            toast.error('Please select at least one permission');
+            return false;
+        }
+
+        switch (selectedOption) {
+            case 'single':
+                if (!employees[0]?.name || !employees[0]?.email) {
+                    toast.error('Please enter employee name and email');
+                    return false;
+                }
+                if (!isValidEmail(employees[0].email)) {
+                    toast.error('Please enter a valid email address');
+                    return false;
+                }
+                break;
+
+            case 'group':
+                if (employees.length < 2) {
+                    toast.error('Please add at least two employees for a group campaign');
+                    return false;
+                }
+                if (!employees.every(emp => emp.name && emp.email && isValidEmail(emp.email))) {
+                    toast.error('Please ensure all employees have valid names and email addresses');
+                    return false;
+                }
+                break;
+
+            case 'firmwide':
+                if (!selectedFile && employees.length < 2) {
+                    toast.error('Please upload a CSV file or add employees manually');
+                    return false;
+                }
+                if (!employees.every(emp => emp.name && emp.email && isValidEmail(emp.email))) {
+                    toast.error('Please ensure all employees have valid names and email addresses');
+                    return false;
+                }
+                break;
+        }
+
+        return true;
+    };
+
+    const isValidEmail = (email) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
+
+    const handleSubmit = async () => {
+        if (!validateCampaign()) return;
+
+        setIsSubmitting(true);
+        try {
+            const response = await fetch('/api/campaigns', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    campaignType: selectedOption,
+                    employees: employees,
+                    permissions: permissions,
+                    additionalInstructions: document.querySelector('textarea').value,
+                    estimatedDuration,
+                    projectedCost,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create campaign');
+            }
+
+            const data = await response.json();
+            toast.success('Campaign created successfully!');
+            // Redirect to campaign details page
+            window.location.href = `/campaigns/${data.campaignId}`;
+        } catch (error) {
+            console.error('Error creating campaign:', error);
+            toast.error('Failed to create campaign. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -728,7 +847,13 @@ const PhishingTests = () => {
                                                 </div>
 
                                                 <div className='flex justify-end mt-4'>
-                                                    <Button color='red'>Begin Campaign</Button>
+                                                    <Button 
+                                                        color='red' 
+                                                        onClick={handleSubmit}
+                                                        disabled={isSubmitting}
+                                                    >
+                                                        {isSubmitting ? 'Creating Campaign...' : 'Begin Campaign'}
+                                                    </Button>
                                                 </div>
 
                                             </div>

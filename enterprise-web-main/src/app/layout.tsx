@@ -8,6 +8,7 @@ import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@c
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import 'animate.css';
+import { Toaster } from 'react-hot-toast';
 
 const poppins = Poppins({ 
   subsets: ["latin"],
@@ -28,6 +29,24 @@ export default function RootLayout({ children }) {
 
      
           {children}
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              className: '',
+              duration: 5000,
+              style: {
+                background: '#333',
+                color: '#fff',
+              },
+            }}
+            containerStyle={{
+              top: 40,
+            }}
+            gutter={8}
+            reverseOrder={false}
+            containerClassName="overflow-auto"
+          />
+
         </body>
       </html>
     </ClerkProvider>
