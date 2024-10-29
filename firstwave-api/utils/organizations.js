@@ -1,20 +1,10 @@
-import { db } from '../config/firebase';
-import { 
-  collection, 
-  doc, 
-  addDoc, 
-  deleteDoc, 
-  updateDoc, 
-  getDoc,
-  getDocs,
-  query,
-  where 
-} from 'firebase/firestore';
+const { getFirestore } = require('firebase-admin/firestore');
+const db = getFirestore();
 
 // Create a new organization
-export const createOrganization = async (orgData) => {
+const createOrganization = async (orgData) => {
   try {
-    const orgRef = await addDoc(collection(db, 'organizations'), {
+    const orgRef = await db.collection('organizations').add({
       ...orgData,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -27,11 +17,14 @@ export const createOrganization = async (orgData) => {
 };
 
 // Get organization by ID
-export const getOrganizationById = async (orgId) => {
+const getOrganizationById = async (orgId) => {
   try {
-    const orgDoc = await getDoc(doc(db, 'organizations', orgId));
-    if (!orgDoc.exists()) return null;
-    return { id: orgDoc.id, ...orgDoc.data() };
+    const orgRef = db.collection('organizations').doc(orgId);
+    const doc = await orgRef.get();
+    if (!doc.exists) {
+      return null;
+    }
+    return { id: doc.id, ...doc.data() };
   } catch (error) {
     console.error('Error fetching organization:', error);
     throw error;
@@ -39,9 +32,9 @@ export const getOrganizationById = async (orgId) => {
 };
 
 // Get all organizations
-export const getAllOrganizations = async () => {
+const getAllOrganizations = async () => {
   try {
-    const querySnapshot = await getDocs(collection(db, 'organizations'));
+    const querySnapshot = await db.collection('organizations').get();
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -53,10 +46,10 @@ export const getAllOrganizations = async () => {
 };
 
 // Update organization
-export const updateOrganization = async (orgId, updates) => {
+const updateOrganization = async (orgId, updates) => {
   try {
-    const orgRef = doc(db, 'organizations', orgId);
-    await updateDoc(orgRef, {
+    const orgRef = db.collection('organizations').doc(orgId);
+    await orgRef.update({
       ...updates,
       updatedAt: new Date().toISOString(),
     });
@@ -67,9 +60,9 @@ export const updateOrganization = async (orgId, updates) => {
 };
 
 // Delete organization
-export const deleteOrganization = async (orgId) => {
+const deleteOrganization = async (orgId) => {
   try {
-    await deleteDoc(doc(db, 'organizations', orgId));
+    await db.collection('organizations').doc(orgId).delete();
   } catch (error) {
     console.error('Error deleting organization:', error);
     throw error;
@@ -77,14 +70,10 @@ export const deleteOrganization = async (orgId) => {
 };
 
 // Search organizations by name
-export const searchOrganizationsByName = async (searchTerm) => {
+const searchOrganizationsByName = async (searchTerm) => {
   try {
-    const q = query(
-      collection(db, 'organizations'),
-      where('name', '>=', searchTerm),
-      where('name', '<=', searchTerm + '\uf8ff')
-    );
-    const querySnapshot = await getDocs(q);
+    const q = db.collection('organizations').where('name', '>=', searchTerm).where('name', '<=', searchTerm + '\uf8ff');
+    const querySnapshot = await q.get();
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -93,4 +82,21 @@ export const searchOrganizationsByName = async (searchTerm) => {
     console.error('Error searching organizations:', error);
     throw error;
   }
+};
+
+// Get tests under an organization
+const getTestsByOrgId = async (orgId) => {
+  const tests = await db.collection('tests').where('organizationId', '==', orgId).get();
+  return tests.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
+
+// Export the functions
+module.exports = {
+  createOrganization,
+  getOrganizationById,
+  getAllOrganizations,
+  updateOrganization,
+  deleteOrganization,
+  searchOrganizationsByName,
+  getTestsByOrgId
 }; 

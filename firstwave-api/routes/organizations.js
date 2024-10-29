@@ -1,21 +1,46 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/firebase');
+const { getOrganizationById, createOrganization, getTestsByOrgId } = require('../utils/organizations');
+const { doc, collection, addDoc } = require('firebase-admin/firestore');
 
 // Create Organization
-router.post('/', async (req, res) => {
+
+// Create a test under an organization
+router.post('/:orgId/tests', async (req, res) => {
   try {
-    const { name, description } = req.body;
-    const orgRef = await db.collection('organizations').add({
-      name,
-      description,
+    const { orgId } = req.params;
+    const { type, scope, context, permissions } = req.body;
+
+    // Check if the organization exists
+    let organization = await getOrganizationById(orgId);
+    if (!organization) {
+      // Create the organization if it doesn't exist
+      const orgData = { name: 'Default Name', description: 'Default Description' }; // You might want to customize this
+      const newOrgId = await createOrganization(orgData);
+      organization = { id: newOrgId, ...orgData };
+    }
+
+    const testRef = await db.collection('organizations').doc(organization.id).collection('tests').add({
+      type,
+      context,
+      scope,
+      permissions,
       createdAt: new Date(),
     });
-    res.status(201).json({ id: orgRef.id, message: 'Organization created successfully' });
+    res.status(201).json({ id: testRef.id, message: 'Test created successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create organization' });
+    res.status(500).json({ error: 'Failed to create test' });
   }
 });
+
+// Fetch tests under an org
+router.get('/:orgId/tests', async (req, res) => {
+  const { orgId } = req.params;
+  const tests = await getTestsByOrgId(orgId);
+  res.status(200).json(tests);
+});
+
 
 // Get All Organizations
 router.get('/', async (req, res) => {

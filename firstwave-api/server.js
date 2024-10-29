@@ -3,8 +3,10 @@ const express = require('express');
 const app = express();
 const organizationsRoute = require('./routes/organizations');
 const usersRoute = require('./routes/users');
+const cors = require('cors');
 
 // Middleware setup
+app.use(cors()); // Allow requests from any origin
 app.use(express.json());
 
 // Routes
