@@ -1,0 +1,10 @@
+<head>
+  <!-- Add this script as early as possible in the head -->
+  <script>
+    // Check for saved theme preference or OS preference
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark')
+    }
+  </script>
+  <!-- Other head elements -->
+</head> 

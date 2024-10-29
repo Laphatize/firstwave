@@ -6,7 +6,19 @@
 }
 
 
+/* Add this to prevent flash */
+body {
+  background-color: rgba(0, 0, 0, 0);
+}
 
+[data-theme='dark'] body {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+/* Optional: Hide content until theme is loaded */
+.no-flash {
+  visibility: hidden;
+}
 
 @tailwind base;
 @tailwind components;
