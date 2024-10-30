@@ -16,13 +16,15 @@ router.post('/:orgId/tests', async (req, res) => {
     let organization = await getOrganizationById(orgId);
     if (!organization) {
       // Create the organization if it doesn't exist
-      const orgData = { name: 'Default Name', description: 'Default Description' }; // You might want to customize this
+      const orgData = { name: 'Default Name', description: 'Default Description', id: orgId }; // You might want to customize this
       const newOrgId = await createOrganization(orgData);
       organization = { id: newOrgId, ...orgData };
     }
 
     const testRef = await db.collection('organizations').doc(organization.id).collection('tests').add({
       type,
+      active: true,
+      state: "Pending Approval",
       context,
       scope,
       permissions,
@@ -41,6 +43,26 @@ router.get('/:orgId/tests', async (req, res) => {
   res.status(200).json(tests);
 });
 
+// Add this route to get a single test
+router.get('/:orgId/tests/:testId', async (req, res) => {
+  try {
+    const { orgId, testId } = req.params;
+    const testDoc = await db.collection('organizations')
+      .doc(orgId)
+      .collection('tests')
+      .doc(testId)
+      .get();
+    
+    if (!testDoc.exists) {
+      return res.status(404).json({ error: 'Test not found' });
+    }
+    
+    res.status(200).json({ id: testDoc.id, ...testDoc.data() });
+  } catch (error) {
+    console.error('Error fetching test:', error);
+    res.status(500).json({ error: 'Failed to fetch test details' });
+  }
+});
 
 // Get All Organizations
 router.get('/', async (req, res) => {

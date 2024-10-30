@@ -4,7 +4,7 @@ const db = getFirestore();
 // Create a new organization
 const createOrganization = async (orgData) => {
   try {
-    const orgRef = await db.collection('organizations').add({
+    const orgRef = await db.collection('organizations').doc(orgData.id).set({
       ...orgData,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -86,7 +86,7 @@ const searchOrganizationsByName = async (searchTerm) => {
 
 // Get tests under an organization
 const getTestsByOrgId = async (orgId) => {
-  const tests = await db.collection('tests').where('organizationId', '==', orgId).get();
+  const tests = await db.collection('organizations').doc(orgId).collection('tests').get();
   return tests.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 

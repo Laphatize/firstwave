@@ -25,10 +25,12 @@ export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
       <html lang="en" className="bg-neutral-900">
-        <body className={`${poppins.variable} font-sans`}>
-
-     
+        <body className={`${poppins.variable} font-sans relative min-h-screen`}>
+          {/* Grid pattern with fade effect */}
+               
           {children}
+
+
           <Toaster 
             position="top-right"
             toastOptions={{

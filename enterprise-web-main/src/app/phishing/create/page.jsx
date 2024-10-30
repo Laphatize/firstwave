@@ -14,6 +14,9 @@ import { Home, BarChart2, Settings, Droplet, Heart, View } from 'lucide-react'
 import FormModal from '@/components/core/FormModal'; // You'll need to create this component
 import { Lock } from 'lucide-react';
 import { toast } from 'react-hot-toast'; // You'll need to install this package
+import Sidebar from '@/components/core/Sidebar';
+import Navbar from '@/components/Navbar';
+
 
 const phishingTests = [
     {
@@ -35,52 +38,6 @@ const phishingTests = [
         disabled: true,
     },
 ];
-
-const Sidebar = ({ children, isOpen, onClose, darkMode }) => (
-    <aside className={`bg-white dark:bg-neutral-800/50 border-r border-neutral-800 text-neutral-800 dark:text-white w-64 min-h-screen fixed left-0 top-0 bottom-0 transition-transform duration-200 ease-in-out z-50 ${isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
-        <div className="bg-gradient-to-bl from-red-500 to-red-900  px-4 mb-4">
-            <div className="flex justify-between items-center mb-4 mt-4">
-                <h1 className="text-lg text-white"><span className="font-semibold">Firstwave</span></h1>
-                <button onClick={onClose} className="text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <b className='mt-4 ml-3 text-sm text-neutral-400'>GENERAL </b>
-        <SidebarLink href="/dashboard" icon={<Home size={18} />}>Dashboard</SidebarLink>
-        <SidebarLink href="/dashboard" icon={<BarChart2 size={18} />}>Analytics</SidebarLink>
-        <SidebarLink href="/dashboard" icon={<Settings size={18} />}>Settings</SidebarLink>
-        <hr className='mt-4 border-neutral-700/50'></hr>
-        <b className='mt-4 ml-3 text-sm text-neutral-400'>PRODUCTS </b>
-        <SidebarLink href="/phishing" icon={<View size={18} />}>FirstWave Core</SidebarLink>
-        <SidebarLink className='ml-3' href="/phishing" icon={
-            <span className="relative flex h-3 w-3 ml-1">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </span>
-        }>Active Tests</SidebarLink>
-        <SidebarLink href="/phishing" className='ml-3' icon={<Heart size={18} />}>Organization Health</SidebarLink>
-
-        <div className="mt-auto py-2 w-full bg-white dark:bg-neutral-800 dark:text-white mx-auto text-center">
-            <OrganizationSwitcher appearance={{ baseTheme: darkMode ? dark : undefined }} />
-        </div>
-    </aside>
-);
-
-const SidebarLink = ({ className, href, children, icon }) => (
-    <Link href={href} className={`block py-2 px-4 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded transition-colors duration-200 flex items-center ${className}`}>
-        {icon && <span className="mr-2">{icon}</span>}
-        {children}
-    </Link>
-);
-
-const Navbar = ({ children }) => (
-    <nav className="bg-neutral-200 dark:bg-neutral-800/40 shadow-md p-4 flex justify-between items-center">
-        {children}
-    </nav>
-);
 
 const PhishingTests = () => {
     const [darkMode, setDarkMode] = useState(true);
@@ -609,42 +566,49 @@ const PhishingTests = () => {
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     };
 
+
+
     const handleSubmit = async () => {
         if (!validateCampaign()) return;
-
+    
         setIsSubmitting(true);
         try {
-            const response = await fetch('/api/campaigns', {
+            const permissionsMap = {
+                send_phishing_emails: permissions[0],
+                social_engineering_phone: permissions[1],
+                create_social_media_profiles: permissions[2],
+                use_advanced_tactics: permissions[3],
+                access_private_social_media: permissions[4]
+            };
+
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organizations/${organization?.id}/tests`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    campaignType: selectedOption,
-                    employees: employees,
-                    permissions: permissions,
-                    additionalInstructions: document.querySelector('textarea').value,
-                    estimatedDuration,
-                    projectedCost,
+                    type: 'spearphishing-v1',
+                    scope: selectedOption,
+                    context: document.querySelector('textarea').value,
+                    permissions: permissionsMap,
                 }),
             });
-
+    
             if (!response.ok) {
-                throw new Error('Failed to create campaign');
+                throw new Error('Failed to create test');
             }
-
+    
             const data = await response.json();
-            toast.success('Campaign created successfully!');
-            // Redirect to campaign details page
-            window.location.href = `/campaigns/${data.campaignId}`;
+            toast.success('Test created successfully!');
+            // Redirect to test details page
+            window.location.href = `/phishing/tests/active`;
         } catch (error) {
-            console.error('Error creating campaign:', error);
-            toast.error('Failed to create campaign. Please try again.');
+            console.error('Error creating test:', error);
+            toast.error('Failed to create test. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
     };
-
     return (
         <>
             <SignedIn>
@@ -692,48 +656,9 @@ const PhishingTests = () => {
                         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-neutral-100 dark:bg-neutral-900">
                             <div className="container mx-auto px-6 py-8">
                                 {!organization ? (
-                                    <div className="bg-white dark:bg-neutral-800 border-t-4 border-red-500 dark:border-red-500 shadow p-6 mb-8">
-                                        <h2 className="text-2xl mb-4 dark:text-white">Welcome to Firstwave</h2>
-                                        <p className="text-neutral-600 dark:text-white mb-6">
-                                            Get started by creating your organization and inviting members.
-                                        </p>
-                                        <Button onClick={openModal} color="red">
-                                            Create Organization
-                                        </Button>
-                                        <Transition appear show={isModalOpen} as={Fragment}>
-                                            <Dialog as="div" className="relative z-10" onClose={closeModal}>
-                                                <Transition.Child
-                                                    as={Fragment}
-                                                    enter="ease-out duration-300"
-                                                    enterFrom="opacity-0"
-                                                    enterTo="opacity-100"
-                                                    leave="ease-in duration-200"
-                                                    leaveFrom="opacity-100"
-                                                    leaveTo="opacity-0"
-                                                >
-                                                    <div className="fixed inset-0 bg-black bg-opacity-25" />
-                                                </Transition.Child>
-
-                                                <div className="fixed inset-0 overflow-y-auto">
-                                                    <div className="flex min-h-full items-center justify-center p-4 text-center">
-                                                        <Transition.Child
-                                                            as={Fragment}
-                                                            enter="ease-out duration-300"
-                                                            enterFrom="opacity-0 scale-95"
-                                                            enterTo="opacity-100 scale-100"
-                                                            leave="ease-in duration-200"
-                                                            leaveFrom="opacity-100 scale-100"
-                                                            leaveTo="opacity-0 scale-95"
-                                                        >
-                                                            <Dialog.Panel className="w-full max-w-lg bg-transparent transform overflow-hidden rounded-2xl p-6 text-left align-middle transition-all">
-                                                                <CreateOrganization routing="hash" appearance={{ baseTheme: darkMode ? dark : undefined }} />
-                                                            </Dialog.Panel>
-                                                        </Transition.Child>
-                                                    </div>
-                                                </div>
-                                            </Dialog>
-                                        </Transition>
-                                    </div>
+                                    <div className='flex justify-center items-center h-screen'>
+                                        <p className='text-2xl font-bold dark:text-white'>Loading...</p>
+                                        </div>
                                 ) : (
                                     <div className=" p-6 mb-8">
 
