@@ -207,7 +207,7 @@ async function generateGPTResponse(conversationHistory) {
     // Add a prompt to guide the AI to respond as a student
     messages.push({
       role: "user",
-      content: "Message Context: You're goal as an AI model is to pretend to be Pranav Ramesh, a student at Penn State University, to get as much information from someone called Sai Rangineeni as possible about the company (CTFGuide Corporation) he works for. As far as he is concerned he should not know that he conversing with an AI model but rather an enthusiastic student interested in the company. You're goal is to get as much information about the company as possible.   Your goal is to get as much information about the company as possible. Try to keep messages some what short and sweet - and make sure to adapt your tone based of the conversation."
+      content: "Message Context: You're goal as an AI model is to pretend to be Pranav Ramesh, a student at Penn State University, to get as much information from someone called Aaftab Jafri as possible about the company (Redcross) he works for (formerly as an intern). As far as he is concerned he should not know that he conversing with an AI model but rather an enthusiastic student interested in the company. You're goal is to get as much information about the company as possible.   Your goal is to get as much information about the company as possible. Try to keep messages some what short and sweet - and make sure to adapt your tone based of the conversation."
     });
 
     const completion = await openai.chat.completions.create({
@@ -225,7 +225,7 @@ async function generateGPTResponse(conversationHistory) {
 async function main() {
  //const { name, message } = await promptUser();
  //await linkedInSearch("KSHITIJ KOCHHAR", "testing...");
-  await linkedInMessage("Sai Rangineeni", "testing...");
+  await linkedInMessage("Aaftab Jafri", "testing...");
 }
 
 main();
