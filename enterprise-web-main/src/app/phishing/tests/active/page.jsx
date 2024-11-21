@@ -21,6 +21,16 @@ const ActiveTests = () => {
   // Add state for tests
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterState, setFilterState] = useState('All');
+
+  // Filtered and searched tests
+  const filteredTests = tests.filter(test => {
+    const matchesSearch = test.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          test.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterState === 'All' || test.state === filterState;
+    return matchesSearch && matchesFilter;
+  });
 
   // Add fetch function
   const fetchTests = async () => {
@@ -113,90 +123,107 @@ const ActiveTests = () => {
                   <p className='text-2xl font-bold dark:text-white'>Loading...</p>
                 </div>
               ) : (
-                <div className="space-y-6 ">
-                  <div className="flex justify-between items-center hidden">
-                    <h2 className="text-2xl font-bold dark:text-white">Active Phishing Tests</h2>
-                    <Button color="red" onClick={() => window.location.href='/phishing/create'}>
-                      Create New Test
-                    </Button>
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center">
+                    <input
+                      type="text"
+                      placeholder="Search tests..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="p-2 border border-neutral-300 rounded-md dark:bg-neutral-800 dark:text-white"
+                    />
+                    <select
+                      value={filterState}
+                      onChange={(e) => setFilterState(e.target.value)}
+                      className="p-2 border border-neutral-300 rounded-md dark:bg-neutral-800 dark:text-white"
+                    >
+                      <option value="All">All</option>
+                      <option value="Pending Approval">Pending Approval</option>
+                      <option value="Queued">Queued</option>
+                      <option value="Starting Soon">Starting Soon</option>
+                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="Live">Live</option>
+                      <option value="FAILED">Failed</option>
+                      <option value="COMPLETED">Completed</option>
+                    </select>
                   </div>
 
                   <div className="grid gap-6">
-                  
-                  {tests.map(test => (
-                    <div 
-                      key={test.id} 
-                      onClick={() => handleTestClick(test.id)}
-                      className={`bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md 
-                        hover:bg-gradient-to-br from-red-800/50 to-red-800/9 
-                        hover:scale-[1.02] hover:shadow-lg transform transition-all duration-200 ease-in-out cursor-pointer
-                        ${test.state === 'Live' ? ' relative' : ''}`}
-                    >
-                      {test.state === 'Live' && (
+                    {filteredTests.map(test => (
+                      <div 
+                        key={test.id} 
+                        onClick={() => handleTestClick(test.id)}
+                        className={`bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-md 
+                          hover:bg-gradient-to-br from-red-800/50 to-red-800/9 
+                          hover:scale-[1.02] hover:shadow-lg transform transition-all duration-200 ease-in-out cursor-pointer
+                          relative`}
+                      >
                         <div className="absolute -top-1 -right-4">
                           <span className={`inline-block px-3 py-1 rounded-full text-sm ${
-                              {
-                                'Pending Approval': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                                'Starting Soon': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-                                'Live': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-                                'Taking a Break': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                              }[test.state]
-                            }`}>
-                              <div className="flex items-center gap-2 px-4 ">
-                                {test.state === 'Live' && (
-                                  <span className="flex h-2 ">
-                                    <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-green-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                  </span>
-                                )}
-                                {test.state}
-                              </div>
-                            </span>
-                        </div>
-                      )}
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-xl font-semibold dark:text-white capitalize">
-                              {test.type.replace(/-/g, ' ')}
-                            </h3>
-                        
-                          </div>
-                          <span className="text-sm text-neutral-500 dark:text-neutral-400">
-                            ID: {test.id}
+                            {
+                              'Pending Approval': 'bg-yellow-900 text-yellow-500',
+                              'Queued': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                              'Starting Soon': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                              'IN_PROGRESS': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+                              'Live': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                              'FAILED': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+                              'COMPLETED': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            }[test.state]}`}
+                          >
+                            <div className="flex items-center gap-2 px-4">
+                              {test.state}
+                              {(test.state === 'Live' || test.state === 'IN_PROGRESS') && (
+                                <span className="flex h-2 w-2 relative">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                </span>
+                              )}
+                            </div>
                           </span>
                         </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 mt-4">
-                        <div>
-                          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Scope</p>
-                          <p className="text-neutral-800 dark:text-neutral-200 capitalize">{test.scope}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Created</p>
-                          <p className="text-neutral-800 dark:text-neutral-200">
-                            {new Date(test.createdAt._seconds * 1000).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-4">
-                        <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">Permissions</p>
-                        <div className="flex flex-wrap gap-2">
-                          {Object.entries(test.permissions).map(([key, value]) => (
-                            <span key={key} className={`px-2 py-1 rounded-md text-xs
-                              ${value 
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                              }`}>
-                              {key.replace(/_/g, ' ')}
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-xl font-semibold dark:text-white capitalize">
+                                {test.type.replace(/-/g, ' ')}
+                              </h3>
+                          
+                            </div>
+                            <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                              ID: {test.id}
                             </span>
-                          ))}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                          <div>
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Scope</p>
+                            <p className="text-neutral-800 dark:text-neutral-200 capitalize">{test.scope}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-1">Created</p>
+                            <p className="text-neutral-800 dark:text-neutral-200">
+                              {new Date(test.createdAt._seconds * 1000).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4">
+                          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-2">Permissions</p>
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries(test.permissions).map(([key, value]) => (
+                              <span key={key} className={`px-2 py-1 rounded-md text-xs
+                                ${value 
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                }`}>
+                                {key.replace(/_/g, ' ')}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                   </div>
                 </div>
               )}

@@ -25,8 +25,16 @@ module.exports = {
         'border-pulse': 'border-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
+      colors: {
+        scrollbar: {
+          track: '#1f2937', // gray-800
+          thumb: '#4b5563', // gray-600
+        }
+      }
     },
   },
   darkMode: 'class',
-  plugins: [],
+  plugins: [
+    require('tailwind-scrollbar')({ nocompatible: true }),
+  ],
 };

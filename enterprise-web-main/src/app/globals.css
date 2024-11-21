@@ -24,3 +24,21 @@ body {
 @tailwind components;
 @tailwind utilities;
 
+
+
+
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 2px rgba(255, 0, 0, 0.2), 0 0 4px rgba(255, 0, 0, 0.2), 0 0 6px rgba(255, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 4px rgba(255, 0, 0, 0.4), 0 0 8px rgba(255, 0, 0, 0.4), 0 0 12px rgba(255, 0, 0, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 2px rgba(255, 0, 0, 0.2), 0 0 4px rgba(255, 0, 0, 0.2), 0 0 6px rgba(255, 0, 0, 0.2);
+  }
+}
+
+.glow-effect {
+  animation: glow 2s infinite;
+}

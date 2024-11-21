@@ -24,14 +24,29 @@ router.post('/:orgId/tests', async (req, res) => {
     const testRef = await db.collection('organizations').doc(organization.id).collection('tests').add({
       type,
       active: true,
-      state: "Pending Approval",
+      state: "Starting Soon",
       context,
       scope,
       permissions,
       createdAt: new Date(),
     });
-    res.status(201).json({ id: testRef.id, message: 'Test created successfully' });
+
+    const Attack = require('../utils/attack');
+    const attack = new Attack(
+      testRef.id,
+      organization.id,
+      type,
+      scope,
+      permissions,
+      context
+    );
+
+    // Execute attack without catch block (let Attack class handle it)
+    attack.executeAttack();
+
+    res.status(201).json({ id: testRef.id, message: 'Test created successfully and attack initiated' });
   } catch (error) {
+    console.error('Error creating test:', error);
     res.status(500).json({ error: 'Failed to create test' });
   }
 });
