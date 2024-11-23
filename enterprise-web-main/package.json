@@ -19,7 +19,7 @@
     "animate.css": "^4.1.1",
     "aos": "^2.3.4",
     "firebase": "^11.0.2",
-    "framer-motion": "^11.3.28",
+    "framer-motion": "^11.11.17",
     "lucide-react": "^0.453.0",
     "mongodb": "^6.8.0",
     "next": "14.2.5",

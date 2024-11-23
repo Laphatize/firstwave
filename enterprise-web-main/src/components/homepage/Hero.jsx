@@ -7,40 +7,31 @@
 import Link from 'next/link';
 import { Button } from '../catalyst/button.jsx';
 import { ArrowRight, ArrowDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
 const Hero = () => {
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const scrollPosition = window.scrollY;
+            setIsScrolled(scrollPosition > 0);
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
     return (
-        <>
-            <div className="py-2 bg-neutral-800/50">
-                <nav className="relative z-50 flex justify-between px-4 mx-auto max-w-7xl">
-                    <div className="flex items-center md:gap-x-12">
-                        <Link href="../" aria-label="Home">
-                            <div className="mx-auto my-auto flex animate__animated animate__fadeIn">
-                                <h1 className="my-auto text-xl text-white">
-                                    <span className="text-white font-medium"> Vyvern <span className='text-xs font-light'>EARLY ALPHA</span> </span>
-                                </h1>
-                            </div>
-                        </Link>
-                    </div>
-
-                    <div className="flex items-center gap-x-5 md:gap-x-8">
-
-                        <div>
-                            <Link className="text-white text-sm" href="/login">
-                               Login
-                            </Link>
-                        </div>
-                        <Button href="login" color="red">
-                            <span>
-                                Get started <span className="hidden lg:inline">today</span>
-                            </span>
-                        </Button>
-                        <div className="-mr-1 md:hidden"></div>
-                    </div>
-                </nav>
+        <div className="fixed inset-0 w-full h-full z-10">
+            <div className={`fixed w-full z-[100] transition-all duration-300 ${
+                isScrolled ? 'bg-neutral-900/95 backdrop-blur-sm shadow-lg' : 'bg-neutral-800/50'
+            }`}>
+             
             </div>
 
-            <div className="bg-neutral-900/50 text-white relative isolate h-screen flex flex-col">
+            <div className="relative h-full flex items-center justify-center z-20 text-white mt-10">
                 <div
                     className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
                     aria-hidden="true"
@@ -168,8 +159,18 @@ const Hero = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Add a gradient overlay that appears when scrolling */}
+                <div 
+                    className={`absolute inset-0 bg-gradient-to-b from-transparent to-neutral-900 transition-opacity duration-500 ${
+                        isScrolled ? 'opacity-100' : 'opacity-0'
+                    }`} 
+                />
             </div>
-        </>
+
+            {/* Add a gradient overlay at the bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-neutral-900 to-transparent" />
+        </div>
     );
 };
 

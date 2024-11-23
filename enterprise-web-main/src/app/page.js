@@ -5,21 +5,19 @@
 */
 
 "use client"
+import MainNavbar from "../components/homepage/MainNavbar";
 import Hero from "../components/homepage/Hero";
-import FeatureCards from "../components/homepage/FeatureCards";
-import Pricing from "../components/homepage/Pricing";
+import Features from "../components/homepage/Features";
 import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/nextjs'
 
-
 export default function Home() {
-
-
   return (
-    <>
-      
-    
-        <Hero />
-       
-    </>
+    <div className="relative">
+      <MainNavbar />
+      <Hero />
+      <div className="relative z-10 mt-screen">
+        <Features />
+      </div>
+    </div>
   );
 }
