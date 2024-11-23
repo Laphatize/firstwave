@@ -40,9 +40,9 @@ module.exports = {
       animation: {
         'border-pulse': 'border-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'ripple-1': 'ripple 6s linear infinite',
-        'ripple-2': 'ripple 6s linear infinite 2s',
-        'ripple-3': 'ripple 6s linear infinite 4s',
+        'ripple-1': 'ripple 6s linear infinite 0.5s',
+        'ripple-2': 'ripple 6s linear infinite 2.5s',
+        'ripple-3': 'ripple 6s linear infinite 4.5s',
         'glow-effect': 'glow 3s ease-in-out infinite',
         'fade-up-1': 'fade-up 0.6s ease-out calc(0.2s * 1) forwards',
         'fade-up-2': 'fade-up 0.6s ease-out calc(0.2s * 2) forwards',

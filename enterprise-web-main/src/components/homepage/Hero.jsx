@@ -17,7 +17,7 @@ const Hero = () => {
                         <Link href="../" aria-label="Home">
                             <div className="mx-auto my-auto flex animate__animated animate__fadeIn">
                                 <h1 className="my-auto text-xl text-white">
-                                    <span className="text-white font-medium"> Vyvern <span className='text-xs font-light hidden'>A CTFGuide Company</span> </span>
+                                    <span className="text-white font-medium"> Vyvern <span className='text-xs font-light'>EARLY ALPHA</span> </span>
                                 </h1>
                             </div>
                         </Link>
@@ -71,7 +71,6 @@ const Hero = () => {
                     <div className="absolute left-[50%] top-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem]">
                         <div className="absolute inset-0 animate-ripple-1 rounded-full border-2 border-red-500/20"></div>
                         <div className="absolute inset-0 animate-ripple-2 rounded-full border-2 border-red-500/20"></div>
-                        <div className="absolute inset-0 animate-ripple-3 rounded-full border-2 border-red-500/20"></div>
                     </div>
                 </div>
 
