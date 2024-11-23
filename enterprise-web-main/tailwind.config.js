@@ -55,7 +55,16 @@ module.exports = {
           track: '#1f2937', // gray-800
           thumb: '#4b5563', // gray-600
         }
-      }
+      },
+      perspective: {
+        '1000': '1000px',
+      },
+      transformStyle: {
+        '3d': 'preserve-3d',
+      },
+      transform: {
+        'perspective-1000': 'perspective(1000px)',
+      },
     },
   },
   darkMode: 'class',

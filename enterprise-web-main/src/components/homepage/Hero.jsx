@@ -107,7 +107,7 @@ const Hero = () => {
                     <div className="relative flex-1 mt-20">
                         <div className="w-full h-full">
                             {/* LinkedIn Persona Card */}
-                            <div className="absolute top-8 right-[-80px] z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg border border-red-800/30 shadow-lg animate-float-slow">
+                            <div className="absolute top-8 right-[-80px] z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg border border-red-800/30 shadow-lg animate-float-slow transform-gpu [transform-style:preserve-3d] [transform:perspective(1000px)_rotateX(10deg)_rotateY(-15deg)]">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 bg-blue-500/10 rounded-full flex items-center justify-center">
                                         <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
@@ -122,7 +122,7 @@ const Hero = () => {
                             </div>
 
                             {/* Tone Adjustment Card */}
-                            <div className="absolute bottom-20 left-[-80px] z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg border border-red-800/30 shadow-lg animate-float">
+                            <div className="absolute bottom-20 left-[-80px] z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg border border-red-800/30 shadow-lg animate-float transform -rotate-2 perspective-1000">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 bg-purple-500/10 rounded-full flex items-center justify-center">
                                         <span className="text-xl">💬</span>
@@ -134,8 +134,8 @@ const Hero = () => {
                                 </div>
                             </div>
 
-                            {/* New: Target Analysis Card */}
-                            <div className="absolute top-40 left-[-100px] z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg border border-red-800/30 shadow-lg animate-float-medium">
+                            {/* Target Analysis Card */}
+                            <div className="absolute top-40 left-[-100px] z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg border border-red-800/30 shadow-lg animate-float-medium transform rotate-2 perspective-1000">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 bg-green-500/10 rounded-full flex items-center justify-center">
                                         <span className="text-xl">🎯</span>
@@ -147,8 +147,8 @@ const Hero = () => {
                                 </div>
                             </div>
 
-                            {/* New: Risk Assessment Card */}
-                            <div className="absolute right-[-60px] bottom-40 z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg border border-red-800/30 shadow-lg animate-float-slow">
+                            {/* Risk Assessment Card */}
+                            <div className="absolute right-[-60px] bottom-40 z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg border border-red-800/30 shadow-lg animate-float-slow transform -rotate-3 perspective-1000">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 bg-yellow-500/10 rounded-full flex items-center justify-center">
                                         <span className="text-xl">⚠️</span>
