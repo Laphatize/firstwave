@@ -32,7 +32,7 @@ const DashboardCard = ({ title, value, label, color, icon }) => (
   </div>
 );
 
-const SecurityScoreCard = ({ score, change }) => {
+const SecurityScoreCard = ({ score, change, nistScores, metrics }) => {
   const getScoreColor = (score) => {
     if (score >= 80) return "text-green-500 dark:text-green-400";
     if (score >= 60) return "text-yellow-500 dark:text-yellow-400";
@@ -40,21 +40,78 @@ const SecurityScoreCard = ({ score, change }) => {
   };
 
   return (
+    <div>
     <div className="bg-white dark:bg-neutral-800 p-6 shadow">
-      <h3 className="text-lg font-semibold mb-2 text-neutral-500 dark:text-white">Security Score</h3>
+      <h3 className="text-lg font-semibold mb-2 text-neutral-500 dark:text-white">Security Posture</h3>
       <div className="flex items-end gap-2">
         <p className={`text-3xl font-bold ${getScoreColor(score)}`}>{score}%</p>
         <p className={`text-sm ${change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
           {change >= 0 ? '↑' : '↓'} {Math.abs(change)}%
         </p>
       </div>
-      <div className="mt-4 h-2 bg-neutral-200 dark:bg-neutral-700 rounded">
-        <div 
-          className={`h-2 rounded ${score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
-          style={{ width: `${score}%` }}
-        />
+      
+      <div className="mt-6 space-y-4">
+
+        <h4 className="text-sm font-semibold text-neutral-500 dark:text-white">NIST Framework Alignment</h4>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">Identify</p>
+            <div className="mt-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded">
+              <div className={`h-2 rounded bg-blue-500`} style={{ width: `${nistScores.identify}%` }} />
+            </div>
+          </div>
+          <div>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">Protect</p>
+            <div className="mt-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded">
+              <div className={`h-2 rounded bg-green-500`} style={{ width: `${nistScores.protect}%` }} />
+            </div>
+          </div>
+          <div>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">Detect</p>
+            <div className="mt-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded">
+              <div className={`h-2 rounded bg-yellow-500`} style={{ width: `${nistScores.detect}%` }} />
+            </div>
+          </div>
+          <div>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">Respond</p>
+            <div className="mt-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded">
+              <div className={`h-2 rounded bg-orange-500`} style={{ width: `${nistScores.respond}%` }} />
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div className="bg-white dark:bg-neutral-800 px-6 pt-1 pb-8 mt-4 shadow">
+
+<div className="mt-6   border-neutral-200 dark:border-neutral-700">
+      <h3 className="text-lg font-semibold mb-2 text-neutral-500 dark:text-white">Compliance Metrics</h3>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">Risk Level</p>
+            <p className={`text-2xl font-bold ${
+              metrics.riskLevel === 'Low' ? 'text-green-500' :
+              metrics.riskLevel === 'Medium' ? 'text-yellow-500' : 'text-red-500'
+            }`}>{metrics.riskLevel}</p>
+          </div>
+          <div>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">NIST Compliance</p>
+            <p className="text-2xl font-bold text-blue-500">{metrics.nistCompliance}%</p>
+          </div>
+          <div>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">Controls in Place</p>
+            <p className="text-2xl font-bold dark:text-white">{metrics.controlsImplemented}/{metrics.totalControls}</p>
+          </div>
+          <div>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">Critical Findings</p>
+            <p className="text-2xl font-bold text-red-500">{metrics.criticalFindings}</p>
+          </div>
+        </div>
       </div>
     </div>
+    </div>
+
   );
 };
 
@@ -86,26 +143,76 @@ const ActivityTimeline = ({ activities }) => (
 );
 
 // New component for test statistics
-const TestStatistics = ({ stats }) => (
+const VulnerabilityAnalysis = ({ departments }) => (
   <div className="bg-white dark:bg-neutral-800 p-6 shadow">
-    <h3 className="text-lg font-semibold mb-4 dark:text-white">Test Statistics</h3>
-    <div className="grid grid-cols-2 gap-4">
-      <div>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">Success Rate</p>
-        <p className="text-2xl font-bold text-green-500">{stats.successRate}%</p>
-      </div>
-      <div>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">Click Rate</p>
-        <p className="text-2xl font-bold text-red-500">{stats.clickRate}%</p>
-      </div>
-      <div>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">Total Tests</p>
-        <p className="text-2xl font-bold dark:text-white">{stats.totalTests}</p>
-      </div>
-      <div>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">At Risk Users</p>
-        <p className="text-2xl font-bold text-yellow-500">{stats.atRiskUsers}</p>
-      </div>
+    <div className="flex justify-between items-center mb-4">
+      <h3 className="text-lg font-semibold dark:text-white">Department Risk Analysis</h3>
+      <select className="bg-transparent dark:text-white border border-neutral-300 dark:border-neutral-600 rounded px-2 py-1 text-sm">
+        <option value="click">Click Rate</option>
+        <option value="report">Report Rate</option>
+      </select>
+    </div>
+
+    <div className="space-y-4">
+      {departments.map((dept, index) => (
+        <div key={index} className="space-y-2">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm font-medium dark:text-white">{dept.name}</p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                {dept.employeeCount} employees
+              </p>
+            </div>
+            <div className="text-right">
+              <p className={`text-sm font-bold ${
+                dept.riskScore > 75 ? 'text-red-500' :
+                dept.riskScore > 50 ? 'text-yellow-500' : 
+                'text-green-500'
+              }`}>
+                {dept.riskScore}% risk
+              </p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                {dept.failedTests} failed tests
+              </p>
+            </div>
+          </div>
+          
+          <div className="relative pt-1">
+            <div className="flex mb-2 items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full 
+                  text-red-600 bg-red-200 dark:bg-red-900/50 dark:text-red-400">
+                  High Risk Users: {dept.highRiskUsers}
+                </span>
+              </div>
+            </div>
+            <div className="overflow-hidden h-2 text-xs flex rounded bg-neutral-200 dark:bg-neutral-700">
+              <div
+                style={{ width: `${dept.riskScore}%` }}
+                className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${
+                  dept.riskScore > 75 ? 'bg-red-500' :
+                  dept.riskScore > 50 ? 'bg-yellow-500' :
+                  'bg-green-500'
+                }`}
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div className="mt-6 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+      <h4 className="text-sm font-semibold mb-2 dark:text-white">Key Insights</h4>
+      <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
+        <li className="flex items-center gap-2">
+          <AlertTriangle size={14} className="text-red-500" />
+          Finance department shows highest click rates
+        </li>
+        <li className="flex items-center gap-2">
+          <Users size={14} className="text-yellow-500" />
+          HR needs additional training focus
+        </li>
+      </ul>
     </div>
   </div>
 );
@@ -122,6 +229,20 @@ const Dashboard = () => {
       change: -5,
       activeTests: 3,
       enrolledMembers: 42,
+      nistScores: {
+        identify: 75,
+        protect: 82,
+        detect: 68,
+        respond: 71,
+        recover: 65
+      },
+      compliance: {
+        riskLevel: 'Medium',
+        nistCompliance: 78,
+        controlsImplemented: 142,
+        totalControls: 171,
+        criticalFindings: 3
+      },
       recentActivities: [
         { type: 'test', description: 'New phishing campaign started', time: '2 hours ago' },
         { type: 'training', description: '5 team members completed security training', time: '1 day ago' },
@@ -132,6 +253,40 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [testData, setTestData] = useState([]);
+    const [departmentData, setDepartmentData] = useState([
+      {
+        name: 'Finance',
+        employeeCount: 45,
+        riskScore: 78,
+        failedTests: 12,
+        highRiskUsers: 8,
+        trend: 'increasing'
+      },
+      {
+        name: 'HR',
+        employeeCount: 32,
+        riskScore: 65,
+        failedTests: 8,
+        highRiskUsers: 5,
+        trend: 'stable'
+      },
+      {
+        name: 'IT',
+        employeeCount: 28,
+        riskScore: 42,
+        failedTests: 4,
+        highRiskUsers: 2,
+        trend: 'decreasing'
+      },
+      {
+        name: 'Sales',
+        employeeCount: 56,
+        riskScore: 58,
+        failedTests: 9,
+        highRiskUsers: 6,
+        trend: 'increasing'
+      }
+    ]);
 
     useEffect(() => {
       // Check for user's preference in localStorage first
@@ -411,7 +566,7 @@ const Dashboard = () => {
                         </div>
                       ) : (
                         <>  
-                            <div className='dark:bg-orange-900/50 dark:text-orange-400 flex justify-between items-center border-t-4 dark:border-orange-900 border-red-500 bg-red-100 shadow p-3 mb-8'>
+                            <div className='hidden dark:bg-orange-900/50 dark:text-orange-400 flex justify-between items-center border-t-4 dark:border-orange-900 border-red-500 bg-red-100 shadow p-3 mb-8'>
                             <h1>You are in demo mode. Your data will save, but some features may be disabled.</h1>
                             <Button color="white">Contact Sales</Button>
                             </div>
@@ -420,16 +575,14 @@ const Dashboard = () => {
                           <p className="text-neutral-600 dark:text-white mb-8">
                             Here's an overview of your organization's cybersecurity status.
                           </p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                            <SecurityScoreCard score={securityMetrics.score} change={securityMetrics.change} />
-                            <TestStatistics stats={testStats} />
-                            <DashboardCard 
-                              title="Active Tests" 
-                              value={securityMetrics.activeTests} 
-                              label="Running Campaigns"
-                              icon={<Activity className="h-5 w-5" />}
-                              color="text-blue-500 dark:text-blue-400" 
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <SecurityScoreCard 
+                              score={securityMetrics.score} 
+                              change={securityMetrics.change}
+                              nistScores={securityMetrics.nistScores}
+                              metrics={securityMetrics.compliance}
                             />
+                            <VulnerabilityAnalysis departments={departmentData} />
                           </div>
                           <div className="mb-8">
                             <SecurityChart tests={testData} />

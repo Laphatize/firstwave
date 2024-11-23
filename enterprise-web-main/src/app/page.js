@@ -19,9 +19,7 @@ export default function Home() {
       
     
         <Hero />
-        <FeatureCards />
-        <Pricing />
-
+       
     </>
   );
 }

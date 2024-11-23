@@ -24,7 +24,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <ClerkProvider>
-      <html lang="en" className="bg-neutral-900">
+      <html lang="en" className="bg-black">
         <body className={`${poppins.variable} font-sans relative min-h-screen`}>
           {/* Grid pattern with fade effect */}
                
