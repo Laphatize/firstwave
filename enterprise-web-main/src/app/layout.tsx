@@ -30,7 +30,7 @@ export const metadata = {
         url: '/og-image.png', // Path to your thumbnail image in the public directory
         width: 1200,
         height: 630,
-        alt: 'Vyvern - AI Powered Security Platform',
+        alt: 'Vyvern - AI Powered HRM',
       },
     ],
     locale: 'en_US',
