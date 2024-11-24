@@ -12,12 +12,26 @@ import { motion } from 'framer-motion';
 
 const Hero = () => {
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
+        // Check if device is mobile
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768); // 768px is typical mobile breakpoint
+        };
+
+        // Initial check
+        checkMobile();
+
         // Add throttling to scroll event
         let ticking = false;
         
         const handleScroll = () => {
+            if (isMobile) {
+                setIsScrolled(window.scrollY > 0);
+                return;
+            }
+
             if (!ticking) {
                 window.requestAnimationFrame(() => {
                     setIsScrolled(window.scrollY > 0);
@@ -27,19 +41,25 @@ const Hero = () => {
             }
         };
 
+        // Listen for window resize
+        window.addEventListener('resize', checkMobile);
         window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+        
+        return () => {
+            window.removeEventListener('resize', checkMobile);
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, [isMobile]);
 
     return (
-        <div className="fixed inset-0 w-full h-full z-10">
+        <div className={`${isMobile ? '' : 'fixed'} inset-0 w-full h-full z-10`}>
             <div className={`fixed w-full z-[100] transition-all duration-300 ${
                 isScrolled ? 'bg-neutral-900/95 backdrop-blur-sm  shadow-lg ' : 'bg-neutral-800/50'
             }`}>
              
             </div>
 
-            <div className="relative h-full flex items-center justify-center z-20 text-white mt-10">
+            <div className="relative h-full flex items-center justify-center z-20 text-white md:mt-10 ">
                 <div
                     className="absolute inset-x-0 -top-40 -z-10  overflow-hidden blur-3xl sm:-top-80"
                     aria-hidden="true"
@@ -83,27 +103,27 @@ const Hero = () => {
                     <div className="text-sm text-gray-400">Average Response Time</div>
                 </div>
 
-                <div className="lg:max-w-6xl md:max-w-3xl sm:max-w-xl max-w-[90%] mx-auto px-4 flex flex-col flex-1 mt-10">
-                    <div className="text-left xl:mt-40 lg:mt-40 sm:mt-40 mt-64 animate__animated animate__fadeIn relative z-[999]">
+                <div className="lg:max-w-6xl md:max-w-3xl sm:max-w-xl max-w-[90%] mx-auto px-4 flex flex-col flex-1">
+                    <div className="text-left xl:mt-40 lg:mt-40 md:mt-40 mt-40 animate__animated animate__fadeIn relative z-[999]">
                         <h1 className='text-2xl'>Introducing Vyvern</h1>
                         <p className="lg:text-6xl md:text-4xl text-3xl font-light mb-4 mt-1 leading">
                             The AI powered platform for human risk management.
                         </p>
 
                         <div className="flex gap-4">
-                            <button className='text-xl border px-4 py-1 border-white rounded-full flex items-center gap-2'>
+                            <button className='md:text-xl text-base border px-3 md:px-4 py-1 border-white rounded-full flex items-center gap-2'>
                                 Try the demo
-                                <ArrowRight className="h-5 w-5" />
+                                <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
                             </button>
                             <button 
                                 onClick={() => {
                                     const featuresSection = document.querySelector('.mt-screen');
                                     featuresSection?.scrollIntoView({ behavior: 'smooth' });
                                 }}
-                                className='cursor-pointer text-xl bg-white border px-4 py-1 text-black border-white rounded-full flex items-center gap-2'
+                                className='cursor-pointer md:text-xl text-base bg-white border px-3 md:px-4 py-1 text-black border-white rounded-full flex items-center gap-2'
                             >
                                 Learn more
-                                <ArrowDown className="h-5 w-5" />
+                                <ArrowDown className="h-4 w-4 md:h-5 md:w-5" />
                             </button>
                         </div>
                     </div>

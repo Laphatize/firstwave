@@ -101,7 +101,15 @@ body {
 
 /* Add these new styles */
 .mt-screen {
-  margin-top: 100vh;
+  /* Default for mobile */
+  margin-top: 2rem;
+}
+
+/* Apply full screen margin only on desktop */
+@media (min-width: 768px) {
+  .mt-screen {
+    margin-top: 100vh;
+  }
 }
 
 /* Ensure smooth scrolling */
@@ -134,4 +142,23 @@ body::-webkit-scrollbar {
 
 .contain-strict {
     contain: strict;
+}
+
+@media (max-width: 767px) {
+    .scroll-section {
+        transform-style: flat;
+        perspective: none;
+    }
+
+    .parallax-wrapper {
+        position: static;
+        overflow: visible;
+        will-change: auto;
+    }
+
+    body {
+        overflow-x: hidden;
+        overflow-y: auto;
+        scroll-behavior: auto;
+    }
 }
