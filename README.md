@@ -1,7 +1,6 @@
 # Vyvern
 
-![Vyvern Banner](https://vivern.com/thumbnail.png)
-
+![Vyvern Banner](https://www.vyvern.com/thumbnail.png)
 Vyvern is an AI powered platform for human risk management.
 
 ---
