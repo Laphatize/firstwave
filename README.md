@@ -3,7 +3,7 @@
 ## Getting Started with Vyvern
 
 ### Frontend Setup
-1. Navigate to the `enterprise-web-backend` directory.
+1. Navigate to the `vyvern-frontend` directory.
 2. Install the dependencies:
    ```bash
    npm install
@@ -14,7 +14,7 @@
    ```
 
 ### Backend Setup
-1. Navigate to the `firstwave-api` directory.
+1. Navigate to the `vyvern-backend` directory.
 2. Start the server:
    ```bash
    node server.js
