@@ -127,3 +127,11 @@ body::-webkit-scrollbar {
 .z-2 {
   z-index: 2;
 }
+
+.contain-paint {
+    contain: content;
+}
+
+.contain-strict {
+    contain: strict;
+}

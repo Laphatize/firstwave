@@ -14,12 +14,20 @@ const Hero = () => {
     const [isScrolled, setIsScrolled] = useState(false);
 
     useEffect(() => {
+        // Add throttling to scroll event
+        let ticking = false;
+        
         const handleScroll = () => {
-            const scrollPosition = window.scrollY;
-            setIsScrolled(scrollPosition > 0);
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    setIsScrolled(window.scrollY > 0);
+                    ticking = false;
+                });
+                ticking = true;
+            }
         };
 
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
@@ -200,7 +208,7 @@ const Hero = () => {
             </div>
 
             {/* Add a gradient overlay at the bottom */}
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-neutral-900 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-neutral-900/4a0 to-transparent" />
         </div>
     );
 };
