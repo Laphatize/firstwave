@@ -190,12 +190,10 @@ const Features = () => {
   };
 
   const handleMouseLeave = (e) => {
-    // Check if we're hovering over the slide-over panel
-    const slideOverPanel = document.querySelector('[data-slideover-panel]');
     const relatedTarget = e?.relatedTarget;
     
-    // Only check contains if both elements exist
-    const isEnteringSlideOver = slideOverPanel && relatedTarget && slideOverPanel.contains(relatedTarget);
+    // Check if the element we're moving to is the slide-over panel or one of its children
+    const isEnteringSlideOver = relatedTarget?.closest('[data-slideover-panel]');
     
     if (!isEnteringSlideOver) {
       setHoveredFeature(null);

@@ -26,14 +26,14 @@ const Hero = () => {
     return (
         <div className="fixed inset-0 w-full h-full z-10">
             <div className={`fixed w-full z-[100] transition-all duration-300 ${
-                isScrolled ? 'bg-neutral-900/95 backdrop-blur-sm shadow-lg' : 'bg-neutral-800/50'
+                isScrolled ? 'bg-neutral-900/95 backdrop-blur-sm  shadow-lg ' : 'bg-neutral-800/50'
             }`}>
              
             </div>
 
             <div className="relative h-full flex items-center justify-center z-20 text-white mt-10">
                 <div
-                    className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+                    className="absolute inset-x-0 -top-40 -z-10  overflow-hidden blur-3xl sm:-top-80"
                     aria-hidden="true"
                 >
                     <div
@@ -46,7 +46,7 @@ const Hero = () => {
                 </div>
 
                 <div
-                    className="absolute inset-x-0 -z-10 transform-gpu overflow-hidden blur-3xl"
+                    className="absolute inset-x-0 -z-10  overflow-hidden blur-3xl"
                     aria-hidden="true"
                 >
                     <div
@@ -76,7 +76,7 @@ const Hero = () => {
                 </div>
 
                 <div className="lg:max-w-6xl md:max-w-3xl sm:max-w-xl max-w-[90%] mx-auto px-4 flex flex-col flex-1 mt-10">
-                    <div className="text-left xl:mt-40 lg:mt-40 sm:mt-40 mt-64 animate__animated animate__fadeIn">
+                    <div className="text-left xl:mt-40 lg:mt-40 sm:mt-40 mt-64 animate__animated animate__fadeIn relative z-[999]">
                         <h1 className='text-2xl'>Introducing Vyvern</h1>
                         <p className="lg:text-6xl md:text-4xl text-3xl font-light mb-4 mt-1 leading">
                             The AI powered platform for human risk management.
@@ -87,7 +87,13 @@ const Hero = () => {
                                 Try the demo
                                 <ArrowRight className="h-5 w-5" />
                             </button>
-                            <button className='text-xl bg-white border px-4 py-1 text-black border-white rounded-full flex items-center gap-2'>
+                            <button 
+                                onClick={() => {
+                                    const featuresSection = document.querySelector('.mt-screen');
+                                    featuresSection?.scrollIntoView({ behavior: 'smooth' });
+                                }}
+                                className='cursor-pointer text-xl bg-white border px-4 py-1 text-black border-white rounded-full flex items-center gap-2'
+                            >
                                 Learn more
                                 <ArrowDown className="h-5 w-5" />
                             </button>
@@ -108,7 +114,7 @@ const Hero = () => {
                                 sm:right-[5%] md:right-[10%] lg:right-[-80px] 
                                 z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg 
                                 border border-red-800/30 shadow-lg 
-                                animate-float-slow transform-gpu 
+                                animate-float-slow  
                                 [transform-style:preserve-3d] [transform:perspective(1000px)_rotateX(10deg)_rotateY(-15deg)]
                                 sm:scale-75 md:scale-90 lg:scale-100
                                 transition-all duration-300">
