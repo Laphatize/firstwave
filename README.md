@@ -1,9 +1,6 @@
 ![Vyvern Banner](https://www.vyvern.com/thumbnail.png)
-Vyvern is an AI powered platform for human risk management.
 
----
-
-## Getting Started
+## Getting Started with Vyvern
 
 ### Frontend Setup
 1. Navigate to the `enterprise-web-backend` directory.
