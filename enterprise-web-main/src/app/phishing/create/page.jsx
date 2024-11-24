@@ -620,7 +620,7 @@ const PhishingTests = () => {
                     <div className={`flex-1 flex flex-col overflow-hidden ${sidebarOpen ? 'ml-64' : ''}`}>
                     <div className='w-full bg-gradient-to-tr from-red-500 to-red-900 hidden'>
                                    <div className='px-4 py-1 text-white text-lg'>
-                                   <FontAwesomeIcon icon={faWater} /> <span className='font-semibold'>Firstwave</span> Core
+                                   <FontAwesomeIcon icon={faWater} /> <span className='font-semibold'>vyvern</span> Core
                                    </div>
                             </div>
                         <Navbar>
@@ -701,7 +701,7 @@ const PhishingTests = () => {
                                                 </div>
                                             </div>
 
-                                                <h2 className='mt-6 dark:text-white text-lg'>What is Firstwave permitted to do?</h2>
+                                                <h2 className='mt-6 dark:text-white text-lg'>What is vyvern permitted to do?</h2>
                                                 <div className='mt-4 grid grid-cols-2 gap-x-4 gap-y-4'>
                                                     {[
                                                         { text: 'Send phishing emails', disabled: false },
@@ -747,8 +747,8 @@ const PhishingTests = () => {
                                                     ))}
                                                 </div>
 
-                                                <h2 className='mt-6 dark:text-white text-lg'>Any other instructions or information for Firstwave?</h2>
-                                                <p className='dark:text-neutral-400  text-sm '>Please don't give Firstwave too much information here, instead use it as a way to be more specific about things you don't want it to do.</p>
+                                                <h2 className='mt-6 dark:text-white text-lg'>Any other instructions or information for vyvern?</h2>
+                                                <p className='dark:text-neutral-400  text-sm '>Please don't give vyvern too much information here, instead use it as a way to be more specific about things you don't want it to do.</p>
                                                 <textarea 
                                                     className='w-full h-24 border-2 border-neutral-800 dark:bg-neutral-900 dark:text-white mt-2 px-2'
                                                     placeholder={displayedPlaceholder}
@@ -796,7 +796,7 @@ const PhishingTests = () => {
                                                 <div className='mt-2 border-2 border-neutral-800 dark:bg-neutral-900 px-4 py-4'>
                                                     <h2 className='dark:text-white text-xl'>How does this test work?</h2>
                                                     <p className='dark:text-white mt-2'>
-                                                    Firstwave uses AI powered web agents that will attempt to reach out to employees via whatever method permitted in the test configuration.
+                                                    vyvern uses AI powered web agents that will attempt to reach out to employees via whatever method permitted in the test configuration.
                                                     </p>
                                                     <p></p>
                                                 </div>

@@ -75,10 +75,10 @@ const Hero = () => {
                     <div className="text-sm text-gray-400">Average Response Time</div>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-4 flex flex-col flex-1 mt-10">
-                    <div className="text-left mt-6 animate__animated animate__fadeIn">
+                <div className="lg:max-w-6xl md:max-w-3xl sm:max-w-xl max-w-[90%] mx-auto px-4 flex flex-col flex-1 mt-10">
+                    <div className="text-left xl:mt-40 lg:mt-40 sm:mt-40 mt-64 animate__animated animate__fadeIn">
                         <h1 className='text-2xl'>Introducing Vyvern</h1>
-                        <p className="text-6xl font-light mb-4 mt-1 leading">
+                        <p className="lg:text-6xl md:text-4xl text-3xl font-light mb-4 mt-1 leading">
                             The AI powered platform for human risk management.
                         </p>
 
@@ -95,10 +95,23 @@ const Hero = () => {
                     </div>
 
                     {/* Product Screenshot */}
-                    <div className="relative flex-1 mt-20">
+                    <div className="relative flex-1 mt-20 mx-auto">
                         <div className="w-full h-full">
+                            <img 
+                                src="/demo.png" 
+                                alt="Product Screenshot" 
+                                className="w-full md:w-4/5 lg:w-full h-full object-cover object-left-top rounded-lg border-t-2 border-l-2 border-r-2 border-red-800/30 mx-auto"
+                            />
+                            
                             {/* LinkedIn Persona Card */}
-                            <div className="absolute top-8 right-[-80px] z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg border border-red-800/30 shadow-lg animate-float-slow transform-gpu [transform-style:preserve-3d] [transform:perspective(1000px)_rotateX(10deg)_rotateY(-15deg)]">
+                            <div className="absolute top-[5%] right-[10%] hidden sm:block 
+                                sm:right-[5%] md:right-[10%] lg:right-[-80px] 
+                                z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg 
+                                border border-red-800/30 shadow-lg 
+                                animate-float-slow transform-gpu 
+                                [transform-style:preserve-3d] [transform:perspective(1000px)_rotateX(10deg)_rotateY(-15deg)]
+                                sm:scale-75 md:scale-90 lg:scale-100
+                                transition-all duration-300">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 bg-blue-500/10 rounded-full flex items-center justify-center">
                                         <svg className="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
@@ -113,7 +126,13 @@ const Hero = () => {
                             </div>
 
                             {/* Tone Adjustment Card */}
-                            <div className="absolute bottom-20 left-[-80px] z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg border border-red-800/30 shadow-lg animate-float transform -rotate-2 perspective-1000">
+                            <div className="absolute bottom-[10%] left-[5%] hidden sm:block 
+                                sm:left-[5%] md:left-[10%] lg:left-[-80px] 
+                                z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg 
+                                border border-red-800/30 shadow-lg animate-float 
+                                transform -rotate-2 perspective-1000
+                                sm:scale-75 md:scale-90 lg:scale-100
+                                transition-all duration-300">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 bg-purple-500/10 rounded-full flex items-center justify-center">
                                         <span className="text-xl">💬</span>
@@ -126,7 +145,13 @@ const Hero = () => {
                             </div>
 
                             {/* Target Analysis Card */}
-                            <div className="absolute top-40 left-[-100px] z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg border border-red-800/30 shadow-lg animate-float-medium transform rotate-2 perspective-1000">
+                            <div className="absolute top-[30%] left-[5%] hidden sm:block 
+                                sm:left-[10%] md:left-[15%] lg:left-[-100px] 
+                                z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg 
+                                border border-red-800/30 shadow-lg animate-float-medium 
+                                transform rotate-2 perspective-1000
+                                sm:scale-75 md:scale-90 lg:scale-100
+                                transition-all duration-300">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 bg-green-500/10 rounded-full flex items-center justify-center">
                                         <span className="text-xl">🎯</span>
@@ -139,7 +164,13 @@ const Hero = () => {
                             </div>
 
                             {/* Risk Assessment Card */}
-                            <div className="absolute right-[-60px] bottom-40 z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg border border-red-800/30 shadow-lg animate-float-slow transform -rotate-3 perspective-1000">
+                            <div className="absolute bottom-[30%] right-[10%] hidden sm:block 
+                                sm:right-[15%] md:right-[20%] lg:right-[-60px] 
+                                z-10 bg-neutral-900/90 backdrop-blur-sm p-4 rounded-lg 
+                                border border-red-800/30 shadow-lg animate-float-slow 
+                                transform -rotate-3 perspective-1000
+                                sm:scale-75 md:scale-90 lg:scale-100
+                                transition-all duration-300">
                                 <div className="flex items-center gap-3">
                                     <div className="h-8 w-8 bg-yellow-500/10 rounded-full flex items-center justify-center">
                                         <span className="text-xl">⚠️</span>
@@ -150,12 +181,6 @@ const Hero = () => {
                                     </div>
                                 </div>
                             </div>
-
-                            <img 
-                                src="/demo.png" 
-                                alt="Product Screenshot" 
-                                className="w-full h-full object-cover object-left-top rounded-lg border-t-2 border-l-2 border-r-2 border-red-800/30"
-                            />
                         </div>
                     </div>
                 </div>

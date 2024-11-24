@@ -14,7 +14,7 @@ const Pricing = () => {
 
     const plans = [
         {
-            name: "FirstWave",
+            name: "vyvern",
             description: "AI-powered phishing testing for all skill levels",
             basePrice: 5,
             features: [

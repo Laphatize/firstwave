@@ -26,7 +26,7 @@ const FeatureCard = ({ title, description, icon, gradient }) => (
 const FeatureCards = () => {
   const features = [
     {
-      title: "FirstWave",
+      title: "vyvern",
       description: "AI powered phishing testing for all skill levels, ensuring everyone in your team can stay secure.",
       icon: faWater,
       gradient: "bg-gradient-to-br from-black/10 to-red-900/50"

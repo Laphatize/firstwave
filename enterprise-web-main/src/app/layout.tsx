@@ -17,7 +17,7 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "Firstwave",
+  title: "vyvern",
   description: "AI powered social engineering",
 };
 

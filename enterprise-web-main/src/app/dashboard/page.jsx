@@ -515,7 +515,7 @@ const Dashboard = () => {
                     <>
                       {!organization ? (
                         <div className="bg-white dark:bg-neutral-800 border-t-4 border-red-500 dark:border-red-500  shadow p-6 mb-8">
-                          <h2 className="text-2xl  mb-4 dark:text-white">Welcome to Firstwave</h2>
+                          <h2 className="text-2xl  mb-4 dark:text-white">Welcome to vyvern</h2>
                           <p className="text-neutral-600 dark:text-white mb-6">
                             Get started by creating your organization and inviting members.
                           </p>

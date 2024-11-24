@@ -44,6 +44,7 @@ const Features = () => {
   };
 
   const [hoveredFeature, setHoveredFeature] = useState(null);
+  const [hoverTimeout, setHoverTimeout] = useState(null);
 
   const slideOverVariants = {
     hidden: { y: '100%', opacity: 0 },
@@ -172,9 +173,38 @@ const Features = () => {
     }
   };
 
+  useEffect(() => {
+    return () => {
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout);
+      }
+    };
+  }, [hoverTimeout]);
+
+  const handleMouseEnter = (featureTitle) => {
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+      setHoverTimeout(null);
+    }
+    setHoveredFeature(featureTitle);
+  };
+
+  const handleMouseLeave = (e) => {
+    // Check if we're hovering over the slide-over panel
+    const slideOverPanel = document.querySelector('[data-slideover-panel]');
+    const relatedTarget = e?.relatedTarget;
+    
+    // Only check contains if both elements exist
+    const isEnteringSlideOver = slideOverPanel && relatedTarget && slideOverPanel.contains(relatedTarget);
+    
+    if (!isEnteringSlideOver) {
+      setHoveredFeature(null);
+    }
+  };
+
   return (
     <div className="relative min-h-screen w-full mt-screen">
-      <div className="w-full min-h-screen bg-neutral-900/95 backdrop-blur-sm z-10">
+      <div className="w-full min-h-screen bg-neutral-900/95 backdrop-blur-sm z-10 pb-[33vh]">
         <div className="min-h-screen bg-neutral-900 relative overflow-hidden">
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-radial from-red-500/10 via-transparent to-transparent opacity-30" />
@@ -258,8 +288,9 @@ const Features = () => {
                   whileHover={{ scale: 1.02, backgroundColor: 'rgba(38, 38, 38, 0.8)' }}
                   transition={{ duration: 0.2 }}
                   className="bg-neutral-800/50 p-8 rounded-lg border border-red-800/20 backdrop-blur-sm relative group"
-                  onMouseEnter={() => setHoveredFeature(feature.title)}
-                  onMouseLeave={() => setHoveredFeature(null)}
+                  onMouseEnter={() => handleMouseEnter(feature.title)}
+                  onMouseLeave={handleMouseLeave}
+                  data-feature-card
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
                   <div className="h-12 w-12 bg-red-500/10 rounded-lg flex items-center justify-center mb-4">
@@ -281,9 +312,10 @@ const Features = () => {
             animate="visible"
             exit="exit"
             variants={slideOverVariants}
+            data-slideover-panel
             className="fixed bottom-0 left-0 right-0 h-1/3 bg-neutral-900/95 border-t border-red-800/20 backdrop-blur-md z-50"
           >
-            <div className="max-w-7xl mx-auto px-4 py-6">
+            <div className="pointer-events-auto max-w-7xl mx-auto px-4 py-6">
               <div className="flex gap-6">
                 {featureDetails[hoveredFeature]?.image && (
                   <div className="w-1/3">

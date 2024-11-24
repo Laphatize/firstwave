@@ -81,7 +81,7 @@ const PhishingTests = () => {
                     <div className={`flex-1 flex flex-col overflow-hidden ${sidebarOpen ? 'ml-64' : ''}`}>
                     <div className='w-full bg-gradient-to-tr from-red-500 to-red-900 hidden'>
                                    <div className='px-4 py-1 text-white text-lg'>
-                                   <FontAwesomeIcon icon={faWater} /> <span className='font-semibold'>Firstwave</span> FirstWave
+                                   <FontAwesomeIcon icon={faWater} /> <span className='font-semibold'>vyvern</span> vyvern
                                    </div>
                             </div>
                         <Navbar>
@@ -118,7 +118,7 @@ const PhishingTests = () => {
                             <div className="container mx-auto px-6 py-8">
                                 {!organization ? (
                                     <div className="bg-white dark:bg-neutral-800 border-t-4 border-red-500 dark:border-red-500 shadow p-6 mb-8">
-                                        <h2 className="text-2xl mb-4 dark:text-white">Welcome to Firstwave</h2>
+                                        <h2 className="text-2xl mb-4 dark:text-white">Welcome to vyvern</h2>
                                         <p className="text-gray-600 dark:text-white mb-6">
                                             Get started by creating your organization and inviting members.
                                         </p>
