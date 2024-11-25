@@ -1,6 +1,7 @@
 const puppeteer = require('puppeteer');
+const CDP = require('chrome-remote-interface');
 const OpenAI = require("openai");
-const browserStreamingService = require('../services/browserStreaming');
+const WebSocket = require('ws');
 
 class Attack {
   constructor(testId, organizationId, type, scope, permissions, context) {
@@ -104,7 +105,8 @@ class Attack {
 
   async initBrowser() {
     try {
-      // Launch browser with specific debugging port
+      console.log('Starting browser initialization...');
+      
       this.browser = await puppeteer.launch({
         headless: false,
         defaultViewport: {
@@ -113,28 +115,78 @@ class Attack {
         },
         args: [
           '--window-size=1280,720',
-          '--remote-debugging-port=9222',
-          '--no-sandbox'
+          '--no-sandbox',
+          '--disable-setuid-sandbox'
         ]
       });
       
       this.page = await this.browser.newPage();
       await this.page.setViewport({ width: 1280, height: 720 });
-
-      // Get the browser's WebSocket endpoint
-      const browserWSEndpoint = this.browser.wsEndpoint();
       
-      // Start streaming the browser window with the WebSocket endpoint
-      await browserStreamingService.startStreaming(this.testId, this.page, browserWSEndpoint);
+      // Navigate to a blank page to ensure we have content
+      await this.page.goto('about:blank');
+
       this.streaming = true;
+      // Start screenshot loop in background
+      this.startScreenshotLoop().catch(console.error);
+
+      // Update test status
+      await this.db.collection('organizations')
+        .doc(this.organizationId)
+        .collection('tests')
+        .doc(this.testId)
+        .update({ 
+          streamActive: true,
+          state: 'Live'
+        });
 
       await this.logMessage('System', 'Browser initialized and streaming started', 'info');
       return true;
+
     } catch (error) {
-      console.error('Browser initialization failed:', error.message);
+      console.error('Browser initialization failed:', error);
+      if (this.browser) {
+        await this.browser.close();
+        this.browser = null;
+        this.page = null;
+      }
       await this.logMessage('System', `Browser initialization failed: ${error.message}`, 'error');
       return false;
     }
+  }
+
+  async startScreenshotLoop() {
+    console.log('Starting screenshot loop...');
+    
+    while (this.streaming && this.page) {
+      try {
+        const screenshot = await this.page.screenshot({
+          type: 'jpeg',
+          quality: 70,
+          encoding: 'binary'
+        });
+
+        // Debug log
+        console.log(`Screenshot taken, size: ${screenshot.length} bytes`);
+
+        if (global.wss && global.wss.clients) {
+          global.wss.clients.forEach((client) => {
+            if (client.testId === this.testId && client.readyState === WebSocket.OPEN) {
+              client.send(screenshot, { binary: true });
+              console.log(`Screenshot sent to client ${client.testId}`);
+            }
+          });
+        }
+
+        // Add a small delay between screenshots (30 FPS)
+        await new Promise(resolve => setTimeout(resolve, 33));
+      } catch (error) {
+        console.error('Error in screenshot loop:', error);
+        await this.logMessage('System', `Screenshot error: ${error.message}`, 'error');
+      }
+    }
+    
+    console.log('Screenshot loop ended');
   }
 
   async login() {
@@ -291,9 +343,18 @@ class Attack {
     } finally {
       // Clean up streaming when attack ends
       if (this.streaming) {
-        await browserStreamingService.stopStreaming(this.testId);
-        this.streaming = false;
+        this.streaming = false;  // This will stop the screenshot loop
+        
+        // Update the test document to reflect streaming status
+        await this.db.collection('organizations')
+          .doc(this.organizationId)
+          .collection('tests')
+          .doc(this.testId)
+          .update({ 
+            streamActive: false 
+          });
       }
+      
       if (this.browser) {
         await this.browser.close();
         this.browser = null;
@@ -490,14 +551,21 @@ class Attack {
   // Add cleanup method for proper resource management
   async cleanup() {
     try {
-      if (this.streaming) {
-        await browserStreamingService.stopStreaming(this.testId);
-        this.streaming = false;
-      }
+      this.streaming = false; // Stop screenshot loop
+      
       if (this.browser) {
         await this.browser.close();
         this.browser = null;
         this.page = null;
+        
+        // Update test status
+        await this.db.collection('organizations')
+          .doc(this.organizationId)
+          .collection('tests')
+          .doc(this.testId)
+          .update({ 
+            streamActive: false 
+          });
       }
     } catch (error) {
       console.error('Cleanup error:', error);

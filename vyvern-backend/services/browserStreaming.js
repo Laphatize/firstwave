@@ -4,7 +4,7 @@ const CDP = require('chrome-remote-interface');
 class BrowserStreamingService {
   constructor() {
     this.wss = null;
-    this.activeStreams = new Map(); // testId -> CDP client
+    this.activeStreams = new Map();
   }
 
   initialize() {
@@ -27,23 +27,24 @@ class BrowserStreamingService {
         throw new Error('Browser WebSocket endpoint is required');
       }
 
-      // connec to Chrome using the WebSocket endpoint
-      const client = await CDP({
-        target: browserWSEndpoint
-      });
+      // Get the target from the page
+      const target = await CDP.New({ target: browserWSEndpoint });
       
+      // Connect to the target
+      const client = await CDP({ target });
       this.activeStreams.set(testId, client);
 
-      // enable required domains
-      const {Page, Runtime} = client;
+      // Enable necessary domains
+      const { Network, Page, Runtime, DOM } = client;
       
-      // enable domains in parallel
       await Promise.all([
-        Page.enable(),
+        Network.enable(),
+        DOM.enable(),
         Runtime.enable()
       ]);
-      
-      // lets stream now...
+
+      // Start screencasting after enabling domains
+      await Page.enable();
       await Page.startScreencast({
         format: 'jpeg',
         quality: 80,
@@ -52,12 +53,10 @@ class BrowserStreamingService {
         everyNthFrame: 1
       });
 
-      // handle screenshot data
+      // Handle screenshot data
       Page.screencastFrame(({ data, sessionId }) => {
-        // okay, the frame is here
         Page.screencastFrameAck({ sessionId });
-
-        // sail away
+        
         if (this.wss) {
           this.wss.clients.forEach((ws) => {
             if (ws.testId === testId && ws.readyState === WebSocket.OPEN) {
@@ -77,8 +76,28 @@ class BrowserStreamingService {
     try {
       const client = this.activeStreams.get(testId);
       if (client) {
-        await client.Page.stopScreencast();
-        await client.close();
+        try {
+          const { Page } = client;
+          // Only try to stop screencast if the connection is still alive
+          if (client.ws && client.ws.readyState === WebSocket.OPEN) {
+            await Page.stopScreencast();
+          }
+        } catch (screencastError) {
+          console.log('Screencast already stopped or connection closed');
+        }
+
+        try {
+          await CDP.Close({ id: client.target });
+        } catch (closeError) {
+          console.log('Target already closed');
+        }
+
+        try {
+          await client.close();
+        } catch (clientError) {
+          console.log('Client already closed');
+        }
+
         this.activeStreams.delete(testId);
       }
     } catch (error) {
@@ -87,6 +106,5 @@ class BrowserStreamingService {
   }
 }
 
-//  c+e singleton instance
 const browserStreamingService = new BrowserStreamingService();
 module.exports = browserStreamingService; 

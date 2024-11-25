@@ -7,6 +7,11 @@ const cors = require('cors');
 const queueProcessor = require('./services/queueProcessor');
 const db = require('./config/firebase');
 const Attack = require('./utils/attack');
+const WebSocket = require('ws');
+global.wss = new WebSocket.Server({ 
+  port: 3002,
+  perMessageDeflate: false // Disable compression for better performance
+});
 
 // Middleware setup
 app.use(cors());
@@ -63,4 +68,18 @@ process.on('SIGTERM', async () => {
 // Routes
 app.use('/api/organizations', organizationsRoute);
 app.use('/api/users', usersRoute);
+
+global.wss.on('connection', (ws, req) => {
+  const testId = req.url.split('/').pop();
+  console.log(`New WebSocket connection for test ${testId}`);
+  ws.testId = testId;
+  
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error);
+  });
+  
+  ws.on('close', () => {
+    console.log(`Client disconnected from test ${testId}`);
+  });
+});
 
