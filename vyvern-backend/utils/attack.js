@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const OpenAI = require("openai");
+const browserStreamingService = require('../services/browserStreaming');
 
 class Attack {
   constructor(testId, organizationId, type, scope, permissions, context) {
@@ -17,6 +18,7 @@ class Attack {
     this.db = require('../config/firebase');
     this.browser = null;
     this.page = null;
+    this.streaming = false;
     
     this.queuePosition = null;
     this.scheduledTime = null;
@@ -53,6 +55,14 @@ class Attack {
 
   async resumeAttack() {
     try {
+      // Initialize browser with streaming if needed
+      if (!this.browser) {
+        const initialized = await this.initBrowser();
+        if (!initialized) {
+          throw new Error('Failed to initialize browser');
+        }
+      }
+
       switch (this.currentStep) {
         case 'research':
           await this.performResearch();
@@ -94,15 +104,35 @@ class Attack {
 
   async initBrowser() {
     try {
+      // Launch browser with specific debugging port
       this.browser = await puppeteer.launch({
         headless: false,
-        defaultViewport: null,
-        args: ['--start-maximized']
+        defaultViewport: {
+          width: 1280,
+          height: 720
+        },
+        args: [
+          '--window-size=1280,720',
+          '--remote-debugging-port=9222',
+          '--no-sandbox'
+        ]
       });
+      
       this.page = await this.browser.newPage();
+      await this.page.setViewport({ width: 1280, height: 720 });
+
+      // Get the browser's WebSocket endpoint
+      const browserWSEndpoint = this.browser.wsEndpoint();
+      
+      // Start streaming the browser window with the WebSocket endpoint
+      await browserStreamingService.startStreaming(this.testId, this.page, browserWSEndpoint);
+      this.streaming = true;
+
+      await this.logMessage('System', 'Browser initialized and streaming started', 'info');
       return true;
     } catch (error) {
       console.error('Browser initialization failed:', error.message);
+      await this.logMessage('System', `Browser initialization failed: ${error.message}`, 'error');
       return false;
     }
   }
@@ -214,6 +244,14 @@ class Attack {
         }
       }
 
+      // Initialize browser with streaming
+      if (!this.browser) {
+        const initialized = await this.initBrowser();
+        if (!initialized) {
+          throw new Error('Failed to initialize browser');
+        }
+      }
+
       // Create queue document first
       await this.db.collection('attackQueue').doc(this.testId).set({
         testId: this.testId,
@@ -250,6 +288,17 @@ class Attack {
       await this.logMessage('System', `Error: ${error.message}`, 'error');
       await this.updateQueueStatus('FAILED');
       throw error;
+    } finally {
+      // Clean up streaming when attack ends
+      if (this.streaming) {
+        await browserStreamingService.stopStreaming(this.testId);
+        this.streaming = false;
+      }
+      if (this.browser) {
+        await this.browser.close();
+        this.browser = null;
+        this.page = null;
+      }
     }
   }
 
@@ -436,6 +485,23 @@ class Attack {
   async executeSocialMediaStep() {
     this.currentStep = 'social_media';
     // Implementation for social media attack
+  }
+
+  // Add cleanup method for proper resource management
+  async cleanup() {
+    try {
+      if (this.streaming) {
+        await browserStreamingService.stopStreaming(this.testId);
+        this.streaming = false;
+      }
+      if (this.browser) {
+        await this.browser.close();
+        this.browser = null;
+        this.page = null;
+      }
+    } catch (error) {
+      console.error('Cleanup error:', error);
+    }
   }
 }
 
