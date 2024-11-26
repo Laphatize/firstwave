@@ -9,7 +9,7 @@ class Attack {
     this.organizationId = organizationId;
     this.type = type;
     this.scope = scope;
-    this.permissions = permissions;
+    this.permissions = Array.isArray(permissions) ? permissions : [];
     this.context = context;
     this.state = 'Starting Soon';
     
@@ -35,6 +35,7 @@ class Attack {
     this.attackPlan = null;
     
     this.recoveryAttempted = false;
+    this.linkedInLoggedIn = false;
     
     this.initializeWithRecovery();
   }
@@ -108,7 +109,7 @@ class Attack {
       console.log('Starting browser initialization...');
       
       this.browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         defaultViewport: {
           width: 1280,
           height: 720
@@ -140,7 +141,7 @@ class Attack {
           state: 'Live'
         });
 
-      await this.logMessage('System', 'Browser initialized and streaming started', 'info');
+      await this.logMessage('Agent', 'I am ready to surf the web.', 'info');
       return true;
 
     } catch (error) {
@@ -160,6 +161,12 @@ class Attack {
     
     while (this.streaming && this.page) {
       try {
+        // Skip if page is busy with evaluation
+        if (this.page._isEvaluating) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          continue;
+        }
+
         const screenshot = await this.page.screenshot({
           type: 'jpeg',
           quality: 70,
@@ -173,7 +180,6 @@ class Attack {
           global.wss.clients.forEach((client) => {
             if (client.testId === this.testId && client.readyState === WebSocket.OPEN) {
               client.send(screenshot, { binary: true });
-              console.log(`Screenshot sent to client ${client.testId}`);
             }
           });
         }
@@ -190,16 +196,42 @@ class Attack {
   }
 
   async login() {
-    await this.page.goto('https://www.linkedin.com/');
-    await this.page.waitForSelector('.nav__button-secondary');
-    await this.page.click('.nav__button-secondary');
-    
-    await this.page.waitForSelector('#username');
-    await this.page.type('#username', process.env.LINKEDIN_USERNAME);
-    await this.page.type('#password', process.env.LINKEDIN_PASSWORD);
-    await this.page.click('.btn__primary--large');
-    
-    await this.page.waitForNavigation();
+    try {
+      await this.logMessage('Function Runner', 'Starting LinkedIn login process', 'info');
+      
+      try {
+        await this.page.goto('https://www.linkedin.com/login');
+      } catch (error) {
+        await this.logMessage('Function Runner', `Failed to load LinkedIn homepage: ${error.message}`, 'error');
+        return false;
+      }
+
+      try {
+        await this.page.waitForSelector('#username');
+        await this.page.type('#username', process.env.LINKEDIN_USERNAME);
+        await this.page.type('#password', process.env.LINKEDIN_PASSWORD);
+        await this.logMessage('Function Runner', `Credentials have been typed in. Now to click login.`, 'info');
+      } catch (error) {
+        await this.logMessage('Function Runner', `Failed to input credentials: ${error.message}`, 'error');
+        return false;
+      }
+
+      try {
+        await this.page.waitForSelector('button[data-litms-control-urn="login-submit"]');
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        await this.page.click('button[data-litms-control-urn="login-submit"]');
+        await this.page.waitForNavigation();
+      } catch (error) {
+        await this.logMessage('Function Runner', `Failed to submit login form: ${error.message}`, 'error');
+        return false;
+      }
+
+      await this.logMessage('Function Runner', 'Successfully logged into LinkedIn', 'info');
+      return true;
+    } catch (error) {
+      await this.logMessage('Function Runner', `LinkedIn login failed: ${error.message}`, 'error');
+      return false;
+    }
   }
 
   async generateMessage(target, conversationHistory = []) {
@@ -325,21 +357,29 @@ class Attack {
       const analysis = await this.analyzeTarget(researchData);
       await this.logMessage('Agent', analysis);
       
-      // Execute attack steps based on permissions
-      if (this.permissions.includes('send phishing emails')) {
-        await this.executePhishingStep();
+      // Execute attack steps based on permissions (with null check)
+      if (this.permissions?.includes('send phishing emails')) {
+        try {
+          await this.executePhishingStep();
+        } catch (error) {
+          await this.logMessage('System', `Phishing step failed: ${error.message}`, 'error');
+        }
       }
       
-      if (this.permissions.includes('social engineering phone')) {
-        await this.executePhoneStep();
+      if (this.permissions?.includes('social engineering phone')) {
+        try {
+          await this.executePhoneStep();
+        } catch (error) {
+          await this.logMessage('System', `Phone step failed: ${error.message}`, 'error');
+        }
       }
       
       await this.updateQueueStatus('COMPLETED');
       return true;
     } catch (error) {
-      await this.logMessage('System', `Error: ${error.message}`, 'error');
+      await this.logMessage('System', `Attack execution error: ${error.message}`, 'error');
       await this.updateQueueStatus('FAILED');
-      throw error;
+      return false;
     } finally {
       // Clean up streaming when attack ends
       if (this.streaming) {
@@ -462,74 +502,220 @@ class Attack {
 
   async performResearch() {
     try {
-      await this.logMessage('Function Runner', 'Waiting on LinkedIn search...');
+      await this.logMessage('Function Runner', 'Starting LinkedIn research...');
       
       // Initialize browser if needed
       if (!this.browser) {
-        this.browser = await puppeteer.launch({
-          headless: false,
-          args: ['--no-sandbox']
-        });
-        this.page = await this.browser.newPage();
+        const initialized = await this.initBrowser();
+        if (!initialized) {
+          throw new Error('Failed to initialize browser');
+        }
       }
 
-      // Search LinkedIn with updated selector
+      // Only login if not already logged in
+      if (!this.linkedInLoggedIn) {
+        const loginSuccess = await this.login();
+        if (!loginSuccess) {
+          throw new Error('LinkedIn login failed');
+        }
+        this.linkedInLoggedIn = true;
+      }
+
+      // Perform the search
       await this.page.goto('https://www.linkedin.com/search/results/companies/');
       await this.page.waitForSelector('input.search-global-typeahead__input');
       await this.page.type('input.search-global-typeahead__input', this.scope);
       await this.page.keyboard.press('Enter');
       await this.page.waitForNavigation();
 
-      // Extract company information
-      const companyData = await this.page.evaluate(() => {
-        const companies = document.querySelectorAll('.search-result-item');
-        return Array.from(companies).map(company => ({
-          name: company.querySelector('.company-name')?.textContent?.trim(),
-          description: company.querySelector('.company-description')?.textContent?.trim(),
-          employeeCount: company.querySelector('.employee-count')?.textContent?.trim(),
-          location: company.querySelector('.company-location')?.textContent?.trim()
-        }));
+      // Set evaluation flag before complex operation
+      this.page._isEvaluating = true;
+      
+      const companyLink = await this.page.evaluate((scope) => {
+        const companies = document.querySelectorAll('.entity-result');
+        let bestMatch = {
+          score: 0,
+          link: null
+        };
+
+        // Simple similarity score function
+        const getSimilarity = (str1, str2) => {
+          str1 = str1.toLowerCase();
+          str2 = str2.toLowerCase();
+          
+          if (str1 === str2) return 1;
+          if (str1.includes(str2) || str2.includes(str1)) return 0.8;
+          
+          const words1 = str1.split(/\s+/);
+          const words2 = str2.split(/\s+/);
+          const commonWords = words1.filter(word => words2.includes(word));
+          return commonWords.length / Math.max(words1.length, words2.length);
+        }; 
+
+        // Get first company link as fallback
+        let firstCompanyLink = null;
+        const firstCompany = companies[0]?.querySelector('.entity-result__title-line a');
+        if (firstCompany) {
+          firstCompanyLink = firstCompany.href;
+        }
+
+        companies.forEach(company => {
+          const nameElement = company.querySelector('.entity-result__title-line .artdeco-button__text, .entity-result__title-line a');
+          if (nameElement?.textContent) {
+            const score = getSimilarity(nameElement.textContent.trim(), scope);
+            if (score > bestMatch.score) {
+              bestMatch = {
+                score: score,
+                link: nameElement.closest('a').href
+              };
+            }
+          }
+        });
+
+        // Return best match if score > 0.3, otherwise return first company
+        return bestMatch.score > 0.3 ? bestMatch.link : firstCompanyLink;
+      }, this.scope);
+
+      if (!companyLink) {
+        throw new Error(`No companies found for "${this.scope}"`);
+      }
+
+      // Clear evaluation flag after operation
+      this.page._isEvaluating = false;
+
+      await this.page.goto(companyLink);
+      await this.page.waitForSelector('.org-top-card'); // Wait for company page to load
+
+      // Take screenshots of key sections
+      const screenshots = {
+        overview: await this.page.screenshot({
+          type: 'jpeg',
+          quality: 80,
+          encoding: 'base64'
+        })
+      };
+
+      // Extract detailed company information
+      const companyData = await this.page.evaluate(() => ({
+        name: document.querySelector('.org-top-card-summary__title')?.textContent?.trim(),
+        industry: document.querySelector('.org-top-card-summary-info-list__info-item')?.textContent?.trim(),
+        employeeCount: document.querySelector('.org-top-card-summary-info-list__info-item:nth-child(2)')?.textContent?.trim(),
+        location: document.querySelector('.org-top-card-summary-info-list__info-item:nth-child(3)')?.textContent?.trim(),
+        about: document.querySelector('.org-about-us-organization-description')?.textContent?.trim(),
+        website: document.querySelector('.org-about-us-company-module__website')?.textContent?.trim(),
+        specialties: document.querySelector('.org-about-us-organization-module__specialties')?.textContent?.trim()
+      }));
+
+      // Generate comprehensive analysis using AI
+      const analysis = await this.generateCompanyOverview({
+        companyData,
+        screenshots
       });
 
-      await this.logMessage('Function Runner', 'LinkedIn search is done, handing off to agent.');
+      await this.logMessage('Agent', analysis);
 
-      // Generate company overview using AI
-      const overview = await this.generateCompanyOverview(companyData[0]);
-      await this.logMessage('Agent', overview);
+      // Generate attack plan based on the research
+      const attackPlan = await this.generateAttackPlan({
+        companyData,
+        analysis,
+        screenshots
+      });
 
-      return companyData[0];
+      await this.logMessage('Agent', 'Based on my research, here is my proposed attack plan:');
+      await this.logMessage('Agent', attackPlan);
+      await this.logMessage('Function Runner', 'Research and planning completed');
+
+      // Store all research data
+      this.researchData = {
+        companyData,
+        screenshots,
+        analysis,
+        attackPlan,
+        timestamp: new Date()
+      };
+
+      return this.researchData;
     } catch (error) {
       await this.logMessage('System', `Research error: ${error.message}`, 'error');
       throw error;
     }
   }
 
-  async generateCompanyOverview(companyData) {
-    const prompt = `Based on this company data: ${JSON.stringify(companyData)}, 
-                   generate a brief overview focusing on potential security implications. 
-                   Format it with these sections: Company Overview, Platform, Location, Size and Network.`;
+  async generateCompanyOverview(data) {
+    const prompt = {
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Analyze this company data and screenshot for potential security implications:
+              
+              Company Data: ${JSON.stringify(data.companyData)}
+              
+              Please analyze the visual information and company structure visible in the search results.
+              
+              Format your analysis with these sections:
+              1. Company Overview
+              2. Digital Footprint
+              3. Potential Attack Vectors
+              4. Security Recommendations`
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${data.screenshot}`
+              }
+            }
+          ]
+        }
+      ],
+      model: "gpt-4o",
+      max_tokens: 1000
+    };
 
-    const completion = await this.openai.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      model: "gpt-4-turbo-preview",
-    });
-
+    const completion = await this.openai.chat.completions.create(prompt);
     return completion.choices[0].message.content;
   }
 
-  async generateAttackPlan() {
-    const prompt = `Given this company: ${JSON.stringify(this.researchData)}
-                   and these permissions: ${JSON.stringify(this.permissions)},
-                   create a detailed but ethical attack plan.
-                   Consider the context: ${this.context}`;
+  async generateAttackPlan(data) {
+    const prompt = {
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Based on this company research, create a detailed but ethical attack plan.
+              
+              Company Data: ${JSON.stringify(data.companyData)}
+              Previous Analysis: ${data.analysis}
+              
+              Available Permissions: ${JSON.stringify(this.permissions)}
+              Test Context: ${this.context}
+              
+              Create a step-by-step attack plan that:
+              1. Identifies high-value targets based on company structure
+              2. Leverages available permissions (${this.permissions.join(', ')})
+              3. Uses company-specific information for targeted approaches
+              4. Maintains ethical boundaries
+              5. Includes specific success metrics`
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${data.screenshots.overview}`
+              }
+            }
+          ]
+        }
+      ],
+      model: "gpt-4-vision-preview",
+      max_tokens: 1500
+    };
 
-    const completion = await this.openai.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      model: "gpt-4-turbo-preview",
-    });
-
-    this.attackPlan = completion.choices[0].message.content;
-    await this.logMessage('Agent', this.attackPlan);
+    const completion = await this.openai.chat.completions.create(prompt);
+    return completion.choices[0].message.content;
   }
 
   async analyzeTarget(researchData) {
@@ -552,6 +738,7 @@ class Attack {
   async cleanup() {
     try {
       this.streaming = false; // Stop screenshot loop
+      this.linkedInLoggedIn = false; // Reset login state
       
       if (this.browser) {
         await this.browser.close();
@@ -569,6 +756,27 @@ class Attack {
       }
     } catch (error) {
       console.error('Cleanup error:', error);
+    }
+  }
+
+  async fullRestart() {
+    try {
+      // Reset all state except browser session
+      this.currentStep = null;
+      this.recoveryPoint = null;
+      this.researchData = null;
+      this.attackPlan = null;
+      this.liveViewMessages = [];
+      this.lastMessageTimestamp = null;
+      this.recoveryAttempted = false;
+      // Don't reset linkedInLoggedIn flag
+      
+      // Start fresh attack
+      return await this.executeAttack();
+    } catch (error) {
+      await this.logMessage('System', `Full restart error: ${error.message}`, 'error');
+      await this.updateQueueStatus('FAILED');
+      throw error;
     }
   }
 }

@@ -6,6 +6,7 @@
 }
 
 
+
 /* Add this to prevent flash */
 body {
   background-color: rgba(0, 0, 0, 0);
@@ -161,4 +162,19 @@ body::-webkit-scrollbar {
         overflow-y: auto;
         scroll-behavior: auto;
     }
+}
+
+/* Add these styles for the video stream */
+.stream-container {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.stream-container:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+video {
+  filter: contrast(1.1) brightness(1.1);
 }

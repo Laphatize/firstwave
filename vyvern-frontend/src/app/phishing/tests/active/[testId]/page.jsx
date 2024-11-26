@@ -12,6 +12,8 @@ import { collection, doc, onSnapshot, query, orderBy } from 'firebase/firestore'
 import { dark } from '@clerk/themes';
 import { UserButton } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+
 
 const TestDetails = () => {
   const [darkMode, setDarkMode] = useState(true);
@@ -22,6 +24,8 @@ const TestDetails = () => {
   const [liveViewMessages, setLiveViewMessages] = useState([]);
   const liveViewRef = useRef(null);
   const router = useRouter();
+  const [streamUrl, setStreamUrl] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
 
   useEffect(() => {
     const storedDarkMode = localStorage.getItem('darkMode');
@@ -79,6 +83,8 @@ const TestDetails = () => {
     document.body.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
+  const [showDetails, setShowDetails] = useState(false);
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -113,6 +119,46 @@ const TestDetails = () => {
     return () => unsubscribe();
   }, [organization, test]);
 
+  useEffect(() => {
+    if (!organization || !test) return;
+    
+    console.log('Connecting to WebSocket...');
+    const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WS_URL}/stream/${params.testId}`);
+    
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+    };
+    
+    ws.onmessage = async (event) => {
+      try {
+        if (event.data instanceof Blob) {
+          const blob = new Blob([event.data], { type: 'image/jpeg' });
+          const url = URL.createObjectURL(blob);
+          
+          // Clean up old URL to prevent memory leaks
+          if (imageUrl) {
+            URL.revokeObjectURL(imageUrl);
+          }
+          
+          setImageUrl(url);
+        }
+      } catch (error) {
+        console.error('Error processing image:', error);
+      }
+    };
+    
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    return () => {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl);
+      }
+      ws.close();
+    };
+  }, [organization, test, params.testId]);
+
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return '';
     return new Date(timestamp).toLocaleTimeString('en-US', {
@@ -125,49 +171,40 @@ const TestDetails = () => {
   const renderMessage = (message) => {
     const isError = message.content.toLowerCase().includes('error');
     
-    switch (message.role) {
-      case 'Agent':
-        return (
-          <div className='hover:bg-neutral-900/50 bg-neutral-900 dark:text-white px-4 py-2 mb-2'>
-            <div className='flex justify-between items-center'>
-              <h1 className='w-[90%]'>
-                <span className='text-yellow-500 font-bold'>Agent:</span> {message.content}
-              </h1>
-              <span className='text-neutral-500 text-sm'>{formatTimestamp(message.timestamp)}</span>
+    const messageStyles = {
+      Agent: 'border-yellow-500/20 bg-yellow-500/5 hover:bg-yellow-500/10',
+      'Function Runner': 'border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10',
+      System: isError ? 'border-red-500/20 bg-red-500/5 hover:bg-red-500/10' : 'border-neutral-500/20 bg-neutral-500/5 hover:bg-neutral-500/10'
+    };
+
+    const roleColors = {
+      Agent: 'text-yellow-500',
+      'Function Runner': 'text-blue-500',
+      System: isError ? 'text-red-500' : 'text-neutral-400'
+    };
+
+    return (
+      <div className={`rounded-lg border ${messageStyles[message.role]} transition-colors duration-150 px-4 py-3 mb-2`}>
+        <div className='flex justify-between items-start gap-4'>
+          <div className='flex-1'>
+            <div className='flex items-center gap-2 mb-1'>
+              <span className={`text-sm font-medium ${roleColors[message.role]}`}>{message.role}</span>
+              <span className='text-neutral-500 text-xs'>{formatTimestamp(message.timestamp)}</span>
             </div>
+            <p className='text-neutral-200 text-sm leading-relaxed'>{message.content}</p>
+            
+            {message.role === 'System' && isError && (
+              <>
+                <hr className='mt-3 border-red-500/20'/>
+                <p className='text-xs mt-2 text-neutral-400'>
+                  Tests may terminate due to interfacing errors or ethical constraints. A developer will investigate and resume the test.
+                </p>
+              </>
+            )}
           </div>
-        );
-
-      case 'Function Runner':
-        return (
-          <div className='hover:bg-neutral-900/50 bg-neutral-900 dark:text-white px-4 py-2 mb-2'>
-            <div className='flex justify-between items-center'>
-              <h1 className='w-[90%]'>
-                <span className='text-yellow-500 font-bold'>Function Runner:</span> {message.content}
-              </h1>
-              <span className='text-neutral-500 text-sm'>{formatTimestamp(message.timestamp)}</span>
-            </div>
-          </div>
-        );
-
-      case 'System':
-        return (
-          <div className={`bg-neutral-900 hover:bg-neutral-900/50  dark:text-white px-4 py-2 mb-2 ${isError ? 'dark:text-red-500' : ''}`}>
-            <div className='flex justify-between items-center'>
-              <h1 className='w-[90%]'>
-                <span className='text-red-500 font-bold'>System:</span> {message.content}
-
-                <hr className='mt-3 border-neutral-400'/>
-                <p className='text-sm mt-1 text-neutral-400'>Typically, tests will terminate due to interfacing error or because of our ethics systems. A developer will look into this error and resume it.</p>
-              </h1>
-              <span className='text-red-500 text-sm'>{formatTimestamp(message.timestamp)}</span>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
+        </div>
+      </div>
+    );
   };
 
   const [selectedMessage, setSelectedMessage] = useState(null);
@@ -180,12 +217,51 @@ const TestDetails = () => {
     setSelectedMessage(null);
   };
 
+  const handleRestartTest = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/organizations/${organization?.id}/tests/${params.testId}/restart`,
+        {
+          method: 'POST',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to restart test');
+      }
+
+      // Refetch test details to update UI
+      await fetchTestDetails();
+    } catch (error) {
+      console.error('Error restarting test:', error);
+    }
+  };
+
+  const handleFullRestartTest = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/organizations/${organization?.id}/tests/${params.testId}/full-restart`,
+        {
+          method: 'POST',
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to restart test');
+      }
+
+      await fetchTestDetails();
+    } catch (error) {
+      console.error('Error restarting test:', error);
+    }
+  };
+
   return (
     <SignedIn>
       <div className={`flex h-screen ${darkMode ? 'dark' : ''} ${selectedMessage ? 'blur-background' : ''}`}>
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} darkMode={darkMode} />
 
-        <div className={`flex-1 flex flex-col overflow-hidden ${sidebarOpen ? 'ml-64' : ''}`}>
+        <div className={`flex-1 flex flex-col overflow-hidden ${sidebarOpen ? 'ml-64' : 'w-full'}`}>
           <Navbar>
             <div className="flex items-center">
               {!sidebarOpen && (
@@ -226,106 +302,178 @@ const TestDetails = () => {
                   <p className="text-xl dark:text-white">Loading test details...</p>
                 </div>
               ) : test ? (
-                <div className='grid grid-cols-3'>
-                <div className="space-y-6 col-span-1">
-                  <div className="bg-white dark:bg-neutral-800 p-8 rounded-l-lg shadow-md">
-                    <div className=" justify-between items-start mb-6">
+                <div className=''>
+                        <div className='bg-neutral-800/80 rounded-lg border border-neutral-700/50'>
+                  {/* Main Header Row */}
+                  <div className='p-4 flex items-center justify-between'>
+                    <div className='flex items-center gap-6'>
                       <div>
-                        <h2 className="text-2xl font-bold dark:text-white capitalize">
+                        <h2 className="text-xl font-bold dark:text-white capitalize flex items-center gap-3">
                           {test.type.replace(/-/g, ' ')}
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium
+                            ${test.state === 'Live' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
+                              'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}`}>
+                            {test.state}
+                          </span>
                         </h2>
-                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                           {test.id}
-                        </p>
-                      </div>
-                      <div className={`px-3 py-1 rounded-full text-xs mt-2 font-medium w-fit
-                        ${test.state === 'Live' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 
-                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}`}>
-                        {test.state}
+                        <div className='flex items-center gap-3 mt-1'>
+                          <p className="text-sm text-neutral-400">ID: <code className='text-neutral-200 bg-neutral-900/50 px-1.5 py-0.5 rounded'>{test.id}</code></p>
+                          <button 
+                            onClick={() => setShowDetails(!showDetails)}
+                            className="text-sm text-neutral-400 hover:text-neutral-200 flex items-center gap-1"
+                          >
+                            {showDetails ? 'Hide Details' : 'Show Details'}
+                            <svg 
+                              className={`w-4 h-4 transition-transform ${showDetails ? 'rotate-180' : ''}`} 
+                              fill="none" 
+                              viewBox="0 0 24 24" 
+                              stroke="currentColor"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
+                    
+                    <div className='flex gap-2'>
+                      <Button 
+                        color="red"
+                        size="sm"
+                        className="hover:bg-red-600/90"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Stop Campaign
+                      </Button>
+                      
+                      <Button color="white" size="sm">
+                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Download Report
+                      </Button>
+                      
+                      <Button 
+                        color="white" 
+                        onClick={handleRestartTest}
+                        disabled={test?.state !== 'FAILED'}
+                        size="sm"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Resume Test
+                      </Button>
+                      
+                      <Button 
+                        color="white" 
+                        onClick={handleFullRestartTest}
+                        disabled={test?.state === 'COMPLETED'}
+                        size="sm"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Full Restart
+                      </Button>
+                    </div>
+                  </div>
 
-                    <div className="grid grid-cols-1 gap-6 mb-6">
+                  {/* Expandable Details Section */}
+                  <div className={`border-t border-neutral-700/30 overflow-hidden transition-all duration-300 ease-in-out ${
+                    showDetails ? 'max-h-96' : 'max-h-0'
+                  }`}>
+                    <div className="p-4 grid grid-cols-3 gap-6">
                       <div>
-                        <h3 className="text-lg font-semibold dark:text-white mb-2">Campaign Details</h3>
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-sm text-neutral-500 dark:text-neutral-400">Scope</p>
-                            <p className="dark:text-white capitalize">{test.scope}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm text-neutral-500 dark:text-neutral-400">Created</p>
-                            <p className="dark:text-white">
-                              {new Date(test.createdAt._seconds * 1000).toLocaleDateString()}
-                            </p>
-                          </div>
+                        <h3 className="text-sm font-medium text-neutral-400 mb-2">Permissions</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(test.permissions).map(([key, value]) => (
+                            <span key={key} className={`px-2 py-1 rounded-md text-xs font-medium
+                              ${value 
+                                ? 'bg-green-500/10 text-green-500 border border-green-500/20'
+                                : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                              }`}>
+                              {key.replace(/_/g, ' ')}
+                            </span>
+                          ))}
                         </div>
                       </div>
 
                       <div>
-                        <h3 className="text-lg font-semibold dark:text-white mb-2">Context</h3>
-                        <p className="dark:text-neutral-300 text-sm">
-                          {test.context || 'No context provided'}
-                        </p>
+                        <h3 className="text-sm font-medium text-neutral-400 mb-2">Scope</h3>
+                        <p className="text-sm text-neutral-200">{test.scope}</p>
+                      </div>
+
+                      <div>
+                        <h3 className="text-sm font-medium text-neutral-400 mb-2">Context</h3>
+                        <p className="text-sm text-neutral-200">{test.context || 'No context provided'}</p>
                       </div>
                     </div>
-
-                    <div>
-                      <h3 className="text-lg font-semibold dark:text-white mb-2">Permissions</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {Object.entries(test.permissions).map(([key, value]) => (
-                          <span key={key} className={`px-3 py-1 rounded-full text-sm
-                            ${value 
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                            }`}>
-                            {key.replace(/_/g, ' ')}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <Button color="red">
-                      Stop Campaign
-                    </Button>
-                    <Button color="white">
-                      Download Report
-                    </Button>
                   </div>
                 </div>
-                <div className='bg-neutral-800 col-span-2 rounded-r-lg rounded-bl-lg border-l border-neutral-700/50 p-8'>
-                  <div className='flex justify-between items-center mb-4'>
-                    <h1 className='dark:text-white text-lg'>Live View</h1>
-                    <div className='flex items-center gap-2'>
-                      {test?.state === 'Live' && (
-                        <span className="flex h-2 w-2 relative">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                        </span>
-                      )}
-                      <span className='text-neutral-400 text-sm'>
-                        {test?.state === 'Live' ? 'Attack in progress' : test?.state}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div 
-                    ref={liveViewRef}
-                    className='overflow-y-scroll h-[80vh] scrollbar-thin scrollbar-thumb-neutral-600 scrollbar-track-neutral-800'
-                  >
-                    {liveViewMessages.length === 0 ? (
-                      <div className='flex justify-center items-center h-full'>
-                        <p className='text-neutral-400'>Waiting for attack to begin...</p>
-                      </div>
-                    ) : (
-                      liveViewMessages.map((message) => (
-                        <div key={message.id} onClick={() => handleMessageClick(message)}>
-                          {renderMessage(message)}
+                <div className='mt-4 bg-neutral-800/50 backdrop-blur-sm col-span-2 rounded-lg border border-neutral-700/50 p-8'>
+                  <div className='grid grid-cols-2 gap-6 h-[400px]'>
+                    {/* Browser Stream - now takes left column */}
+                    <div className="relative w-full h-full bg-neutral-900 rounded-xl overflow-hidden border border-neutral-700/30">
+                      <div className="absolute top-0 left-0 right-0 bg-neutral-800/80 backdrop-blur-sm p-3 border-b border-neutral-700/30">
+                        <div className="flex items-center gap-2">
+                          <div className="flex gap-1.5">
+                            <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+                            <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                            <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+                          </div>
+                          <div className="px-3 py-1.5 bg-neutral-900/50 rounded text-neutral-400 text-sm flex-1 text-center">
+                            Live Browser Stream
+                          </div>
                         </div>
-                      ))
-                    )}
+                      </div>
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          className="w-full h-full object-contain mt-12"
+                          alt="Browser Stream"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-neutral-400 mt-[6%]">
+                          <Image
+                            src="/break.png"
+                            alt="Stream Unavailable"
+                            width={400}
+                            height={140}
+                            className="opacity-50 mb-4 w-full h-auto object-contain"
+                          />
+                          <p className="text-sm hidden">Stream unavailable</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Live Messages - now takes right column */}
+                    <div className='bg-neutral-800/80 rounded-xl border border-neutral-700/30 h-[400px] flex flex-col'>
+                      <div className='p-4 border-b border-neutral-700/30'>
+                        <h2 className='text-neutral-300 font-medium'>Attack Logs</h2>
+                      </div>
+                      <div 
+                        ref={liveViewRef}
+                        className='flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-600 scrollbar-track-transparent p-4'
+                      >
+                        {liveViewMessages.length === 0 ? (
+                          <div className='flex flex-col items-center justify-center py-12 text-neutral-500'>
+                            <svg className="w-12 h-12 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            <p className='text-sm'>Waiting for attack logs...</p>
+                          </div>
+                        ) : (
+                          liveViewMessages.map((message) => (
+                            <div key={message.id} onClick={() => handleMessageClick(message)}>
+                              {renderMessage(message)}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
              </div>

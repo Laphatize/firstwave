@@ -600,8 +600,8 @@ const PhishingTests = () => {
     
             const data = await response.json();
             toast.success('Test created successfully!');
-            // Redirect to test details page
-            window.location.href = `/phishing/tests/active`;
+            // Redirect to specific test details page instead of the list
+            window.location.href = `/phishing/tests/active/${data.id}`;
         } catch (error) {
             console.error('Error creating test:', error);
             toast.error('Failed to create test. Please try again.');

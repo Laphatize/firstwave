@@ -90,4 +90,96 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Add this route to restart a failed test
+router.post('/:orgId/tests/:testId/restart', async (req, res) => {
+  try {
+    const { orgId, testId } = req.params;
+    
+    // Get test reference
+    const testRef = db.collection('organizations')
+      .doc(orgId)
+      .collection('tests')
+      .doc(testId);
+
+    // Get test data
+    const testDoc = await testRef.get();
+    if (!testDoc.exists) {
+      return res.status(404).json({ error: 'Test not found' });
+    }
+
+    const testData = testDoc.data();
+    if (testData.state !== 'FAILED') {
+      return res.status(400).json({ error: 'Only failed tests can be restarted' });
+    }
+
+    // Update test state
+    await testRef.update({
+      state: 'Starting Soon',
+      updatedAt: new Date()
+    });
+
+    // Create new attack instance
+    const Attack = require('../utils/attack');
+    const attack = new Attack(
+      testId,
+      orgId,
+      testData.type,
+      testData.scope,
+      testData.permissions,
+      testData.context
+    );
+
+    // Execute attack without catch block (let Attack class handle it)
+    attack.executeAttack();
+
+    res.status(200).json({ message: 'Test restart initiated' });
+  } catch (error) {
+    console.error('Error restarting test:', error);
+    res.status(500).json({ error: 'Failed to restart test' });
+  }
+});
+
+router.post('/:orgId/tests/:testId/full-restart', async (req, res) => {
+  try {
+    const { orgId, testId } = req.params;
+    
+    const testRef = db.collection('organizations')
+      .doc(orgId)
+      .collection('tests')
+      .doc(testId);
+
+    const testDoc = await testRef.get();
+    if (!testDoc.exists) {
+      return res.status(404).json({ error: 'Test not found' });
+    }
+
+    const testData = testDoc.data();
+
+    // Clear recovery point and update state
+    await testRef.update({
+      state: 'Starting Soon',
+      updatedAt: new Date(),
+      recoveryPoint: null, // Clear recovery point for full restart
+      currentStep: null    // Reset current step
+    });
+
+    const Attack = require('../utils/attack');
+    const attack = new Attack(
+      testId,
+      orgId,
+      testData.type,
+      testData.scope,
+      testData.permissions,
+      testData.context
+    );
+
+    attack.fullRestart();
+
+    res.status(200).json({ message: 'Full test restart initiated' });
+  } catch (error) {
+    console.error('Error restarting test:', error);
+    res.status(500).json({ error: 'Failed to restart test' });
+  }
+});
+
 module.exports = router;
