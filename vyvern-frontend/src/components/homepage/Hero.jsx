@@ -111,7 +111,7 @@ const Hero = () => {
                         </p>
 
                         <div className="flex gap-4">
-                            <button className='md:text-xl text-base border px-3 md:px-4 py-1 border-white rounded-full flex items-center gap-2'>
+                            <button className='hidden md:text-xl text-base border px-3 md:px-4 py-1 border-white rounded-full flex items-center gap-2'>
                                 Try the demo
                                 <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
                             </button>

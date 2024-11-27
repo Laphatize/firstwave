@@ -291,7 +291,7 @@ const Features = () => {
                   data-feature-card
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg" />
-                  <div className="h-12 w-12 bg-red-500/10 rounded-lg flex items-center justify-center mb-4">
+                  <div className="h-12 w-12 bg-red-500/10  rounded-lg flex items-center justify-center mb-4">
                     <span className="text-2xl">{feature.icon}</span>
                   </div>
                   <h3 className="text-xl font-semibold mb-2 text-white">{feature.title}</h3>
@@ -316,11 +316,11 @@ const Features = () => {
             <div className="pointer-events-auto max-w-7xl mx-auto px-4 py-6">
               <div className="flex gap-6">
                 {featureDetails[hoveredFeature]?.image && (
-                  <div className="w-1/3">
+                  <div className="w-1/3 hidden">
                     <img 
                       src={featureDetails[hoveredFeature].image} 
                       alt={hoveredFeature}
-                      className="rounded-lg object-cover h-full w-full"
+                      className="rounded-lg hidden object-cover h-full w-full"
                     />
                   </div>
                 )}
