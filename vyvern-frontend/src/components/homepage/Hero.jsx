@@ -104,7 +104,7 @@ const Hero = () => {
                 </div>
 
                 <div className="lg:max-w-6xl md:max-w-3xl sm:max-w-xl max-w-[90%] mx-auto px-4 flex flex-col flex-1">
-                    <div className="text-left xl:mt-40 lg:mt-40 md:mt-40 mt-40 animate__animated animate__fadeIn relative z-[999]">
+                    <div className="text-left xl:mt-60 lg:mt-40 md:mt-40 mt-40 animate__animated animate__fadeIn relative z-[999]">
                         <h1 className='text-2xl'>Introducing Vyvern</h1>
                         <p className="lg:text-6xl md:text-4xl text-3xl font-light mb-4 mt-1 leading">
                             The AI powered platform for human risk management.
