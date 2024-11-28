@@ -9,7 +9,7 @@ import { dark } from '@clerk/themes';
 import Link from 'next/link';
 import { faWater, faShieldAlt, faChartLine, faHome, faCog, faEye, faHeart } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { UserRound, UsersRound, Building } from 'lucide-react'
+import { UserRound, UsersRound, Building, Loader } from 'lucide-react'
 import { Home, BarChart2, Settings, Droplet, Heart, View } from 'lucide-react'
 import FormModal from '@/components/core/FormModal'; // You'll need to create this component
 import { Lock } from 'lucide-react';
@@ -657,8 +657,8 @@ const PhishingTests = () => {
                             <div className="container mx-auto px-6 py-8">
                                 {!organization ? (
                                     <div className='flex justify-center items-center h-screen'>
-                                        <p className='text-2xl font-bold dark:text-white'>Loading...</p>
-                                        </div>
+                                                <Loader className='animate-spin' color='red' size={35}/>
+                                            </div>
                                 ) : (
                                     <div className=" p-6 mb-8">
 

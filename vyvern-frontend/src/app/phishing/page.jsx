@@ -140,7 +140,7 @@ const PhishingPage = () => {
                     <p className="text-neutral-600 dark:text-neutral-400 text-lg">
                       Protect your organization with advanced security awareness training
                     </p>
-                    <Button color="red" className="mt-4">
+                    <Button color="red" href="/phishing/create" className="mt-4">
                       Start New Campaign
                     </Button>
                   </div>

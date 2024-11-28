@@ -182,4 +182,66 @@ router.post('/:orgId/tests/:testId/full-restart', async (req, res) => {
   }
 });
 
+// Add this route near the top of the file, after the imports
+router.post('/setup', async (req, res) => {
+  try {
+    const {
+      industry,
+      size,
+      location,
+      securityConcerns,
+      communicationChannels,
+      previousIncidents,
+      regulatoryRequirements,
+      userId,
+      organizationId
+    } = req.body;
+
+    // Validate required fields
+    if (!industry || !size || !location || !organizationId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Get organization reference - using the db instance directly
+    const orgRef = db.collection('organizations').doc(organizationId);
+
+    // Update organization with setup data
+    await orgRef.set({
+      industry,
+      size: parseInt(size),
+      location,
+      securityConcerns: securityConcerns || [],
+      communicationChannels: communicationChannels || [],
+      previousIncidents: previousIncidents || false,
+      regulatoryRequirements: regulatoryRequirements || [],
+      setupCompleted: true,
+      setupDate: new Date(),
+      updatedAt: new Date(),
+      userId
+    }, { merge: true });
+
+    res.status(200).json({ message: 'Organization setup completed successfully' });
+  } catch (error) {
+    console.error('Error in organization setup:', error);
+    res.status(500).json({ error: 'Failed to complete organization setup' });
+  }
+});
+
+// Add this route near the top with other organization routes
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const orgDoc = await db.collection('organizations').doc(id).get();
+
+        if (!orgDoc.exists) {
+            return res.status(404).json({ error: 'Organization not found' });
+        }
+
+        res.status(200).json({ id: orgDoc.id, ...orgDoc.data() });
+    } catch (error) {
+        console.error('Error fetching organization:', error);
+        res.status(500).json({ error: 'Failed to fetch organization' });
+    }
+});
+
 module.exports = router;
