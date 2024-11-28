@@ -1,0 +1,16 @@
+{
+  "name": "vyvern",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd vyvern-frontend && npm run dev",
+    "dev:backend": "cd vyvern-backend && nodemon server.js",
+    "install:all": "concurrently \"npm run install:backend\" \"npm run install:frontend\"",
+    "install:frontend": "cd vyvern-frontend && npm install",
+    "install:backend": "cd vyvern-backend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.0"
+  }
+} 
