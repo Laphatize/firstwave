@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import { SignedIn, useUser, useOrganization } from '@clerk/nextjs';
 import { Building, Users, Shield, Globe, Phone, Mail, Lock } from 'lucide-react';
-
+import { OrganizationSwitcher } from '@clerk/nextjs';
+import { dark } from '@clerk/themes';
 // Input component with dark theme styling
 const Input = ({ label, icon, children, ...props }) => (
   <div className="space-y-1">
@@ -268,8 +269,15 @@ export default function Setup() {
         <div className="flex flex-col items-center relative z-10 max-w-[1200px] mx-auto">
           <div className="flex gap-6 items-start w-full">
             <div className="w-80 hidden lg:block" />
-
-            <div className="bg-neutral-800/50 backdrop-blur-sm p-8 rounded-xl shadow-lg border border-neutral-700 w-full">
+   
+                <div className='w-full'>       
+                <OrganizationSwitcher 
+                    appearance={{ 
+                        baseTheme: dark,
+                     
+                    }} 
+                />    
+            <div className="mt-2 bg-neutral-800/50 backdrop-blur-sm p-8 rounded-xl shadow-lg border border-neutral-700 ">
               <h1 className="text-2xl font-bold mb-2 text-center text-white">Welcome to Vyvern <span className="text-xs text-neutral-400">beta</span></h1>
               <p className="text-white text-center mb-6">
                 Let's understand your organization's security needs
@@ -418,8 +426,8 @@ export default function Setup() {
                 </Button>
               </form>
             </div>
-
-            <div className="flex flex-col items-center ">
+            </div> 
+            <div className="flex flex-col items-center mt-10">
               <div className="bg-neutral-800/50 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-neutral-700 w-80 sticky top-4 hidden lg:block">
                 <h3 className="text-lg font-semibold text-white mb-3">Need Help?</h3>
                 <p className="text-neutral-300 text-sm mb-4">

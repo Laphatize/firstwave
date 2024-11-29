@@ -119,6 +119,13 @@ const PhishingPage = () => {
         <div className={`flex-1 flex flex-col overflow-hidden ${sidebarOpen ? 'ml-64' : ''}`}>
           <Navbar>
             <div className="flex items-center">
+            {!sidebarOpen && (
+                    <Button onClick={toggleSidebar} className="mr-4 cursor-pointer text-neutral-800 dark:text-white" color="neutral">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
+                    </Button>
+                  )}
               <h1 className="text-xl font-semibold text-neutral-800 dark:text-white">Phishing Campaigns</h1>
             </div>
           </Navbar>

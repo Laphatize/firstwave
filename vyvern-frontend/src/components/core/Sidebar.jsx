@@ -37,9 +37,9 @@ const Sidebar = ({ children, isOpen, onClose, darkMode }) => {
 
     return (
         <aside className={`bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border-r border-neutral-200 dark:border-neutral-800/50 text-neutral-800 dark:text-white w-64 min-h-screen fixed left-0 top-0 bottom-0 transition-transform duration-300 ease-in-out z-50 ${isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
-            <div className="bg-gradient-to-br from-red-500 via-red-600 to-red-700 px-6 py-5">
+            <div className="bg-gradient-to-br from-red-500 via-red-600 to-red-700 px-6 py-4">
                 <div className="flex justify-between items-center">
-                    <h1 className="text-xl text-white font-medium">vyvern</h1>
+                    <img src="../../../trans_logo.png" className='w-24 bg-transparent text-white' />
                     <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -58,14 +58,13 @@ const Sidebar = ({ children, isOpen, onClose, darkMode }) => {
 
                 <div className="space-y-1 ">
                     <b className='text-xs font-medium text-neutral-400 px-3'>PRODUCTS</b>
-                    <SidebarLink href="/phishing" icon={<View size={16} />}>vyvern Core</SidebarLink>
+                    <SidebarLink href="/phishing" icon={<View size={16} />}>Phishing Tests</SidebarLink>
                     <SidebarLink href="/phishing/tests/active" icon={
-                        <span className="relative flex h-2 w-2 ml-4">
+                        <span className="relative flex h-2 w-2 ml-6">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                         </span>
                     }>Active Tests</SidebarLink>
-                    <SidebarLink href="/phishing" icon={<Heart size={16} />}>Organization Health</SidebarLink>
                 </div>
             </div>
 
