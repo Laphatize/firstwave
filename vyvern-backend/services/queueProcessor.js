@@ -56,7 +56,14 @@ class QueueProcessor {
           test.type,
           test.scope,
           test.permissions,
-          test.context
+          test.context,
+          null, // targets
+          {
+            name: test.organizationName || test.scope,
+            industry: test.industry,
+            size: test.size,
+            location: test.location
+          } // companyContext
         );
 
         // Add to tracking

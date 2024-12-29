@@ -35,7 +35,15 @@ async function recoverInProgressAttacks() {
         attackData.type,
         attackData.scope,
         attackData.permissions,
-        attackData.context
+        attackData.context,
+        attackData.name,
+        null, // targets
+        // attackData.companyContext || {
+        //   name: attackData.scope,
+        //   industry: null,
+        //   size: null,
+        //   location: null
+        // }
       );
       
       // Recovery will happen automatically through constructor

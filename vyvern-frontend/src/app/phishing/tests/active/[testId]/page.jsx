@@ -381,6 +381,9 @@ const TestDetails = () => {
                     </div>
                   </div>
 
+
+               
+
                   {/* Expandable Details Section */}
                   <div className={`border-t border-neutral-700/30 overflow-hidden transition-all duration-300 ease-in-out ${
                     showDetails ? 'max-h-96' : 'max-h-0'
@@ -413,6 +416,41 @@ const TestDetails = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Progress Section */}  
+                <div className='mt-4 bg-neutral-800/50 backdrop-blur-sm col-span-2 rounded-lg border border-neutral-700/50 p-8'>
+                  <div className='flex items-center gap-2'>
+                    <div className='w-3 h-3 rounded-full bg-green-500/80'></div>
+                    <p className='text-sm text-neutral-400'>Execution Progress</p>
+
+
+
+                    </div>
+                    <div className='grid grid-cols-4 gap-2'>
+                      <div className='w-full px-4 py-2 bg-neutral-700/30 rounded-lg mt-2'>
+                      <p className='text-sm text-neutral-400'>Step 1 <span className='text-neutral-500'>- 10:20 AM 12/28/2024</span></p>
+                          <h1 className='text-lg text-neutral-400'>Created an attack plan</h1>
+                          <p className='text-sm text-neutral-400'>Took 30 seconds to complete</p>
+                      
+                      </div>
+
+                      <div className='w-full px-4 py-2 bg-neutral-700/30 rounded-lg mt-2'>
+                      <p className='text-sm text-neutral-400'>Step 2 <span className='text-neutral-500'>- 10:21 AM 12/28/2024</span></p>
+                          <h1 className='text-lg text-neutral-400'>Ensuring ethics of plan</h1>
+                          <p className='text-sm text-neutral-400'>Took 1 minute to complete</p>
+                        
+                      </div>
+
+                      <div className='w-full px-4 py-2 bg-red-700/30 rounded-lg mt-2'>
+                      <p className='text-sm text-neutral-400'>Step 3 <span className='text-neutral-500'>- 10:23 AM 12/28/2024</span></p>
+                          <h1 className='text-lg text-neutral-400 truncate'>Learning about CTFGuide Corporation</h1>
+                          <p className='text-sm text-neutral-400'>In progress</p>
+                       
+                      </div>
+                  </div>
+                </div>
+
+
                 <div className='mt-4 bg-neutral-800/50 backdrop-blur-sm col-span-2 rounded-lg border border-neutral-700/50 p-8'>
                   <div className='grid grid-cols-2 gap-6 h-[400px]'>
                     {/* Browser Stream - now takes left column */}
