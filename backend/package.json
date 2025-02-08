@@ -10,6 +10,9 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.2",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "playwright": "^1.50.1",
+    "steel-sdk": "^0.1.0-beta.9",
+    "uuid": "^11.0.5"
   }
 }
