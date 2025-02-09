@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 
 const openai = new OpenAI({
-  apiKey: "sk-R_jpm9H9LFCHTZEVX1mBBCOfns16EBe17V2SrXlOtUT3BlbkFJMLYzrYwYzRxC3nnIJJAodZjLNOT93vzKy1WS52IlkA",
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 // Create screenshots directory if it doesn't exist
