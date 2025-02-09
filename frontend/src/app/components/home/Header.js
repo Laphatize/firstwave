@@ -23,7 +23,7 @@ export default function Header() {
                 d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" 
               />
             </svg>
-            FirstWave
+            Firstwave
           </h1>
           <h1 className="mt-10 text-5xl font-semibold tracking-tight text-pretty text-white sm:text-7xl">
             Secure Your <span className="relative inline-block">
@@ -33,8 +33,7 @@ export default function Header() {
             </span>
           </h1>
           <p className="mt-8 text-lg font-medium text-pretty text-zinc-400 sm:text-xl/8">
-            We help enterprises identify and address human vulnerabilities through AI social engineering assessments, protecting your organization from the inside out.
-          </p>
+            We leverage AI-driven social engineering to pinpoint and resolve human vulnerabilities, <span className="text-indigo-500  font-bold"> protecting </span> your enterprise from the inside out.          </p>
           <div className="mt-10 flex items-center gap-x-6">
             <button 
               onClick={() => window.location.href = '/dashboard'} 
@@ -50,7 +49,7 @@ export default function Header() {
           </div>
 
           {/* Logo Cloud Section */}
-          <div className="mt-16 sm:mt-24 border-t border-zinc-800 pt-8">
+          <div className="hidden mt-16 sm:mt-24 border-t border-zinc-800 pt-8">
             <p className="text-sm font-semibold leading-6 text-zinc-400 mb-6">
               Trusted by security teams worldwide
             </p>
@@ -114,9 +113,9 @@ export default function Header() {
         </div>
         <div className="mx-auto mt-16 flex max-w-2xl sm:mt-24 lg:mt-0 lg:mr-0 lg:ml-10 lg:max-w-none xl:ml-32">
           <div className="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
-            <div className="relative w-[76rem] h-[45rem]">
+            <div className="relative w-[56rem] h-[35rem]">
               <Image
-                src="/security-dashboard.svg"
+                src="/cropped_dashboard.png"
                 alt="Security Dashboard"
                 fill
                 priority
