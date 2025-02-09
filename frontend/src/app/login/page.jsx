@@ -19,7 +19,11 @@ export default function Login() {
     try {
       const res = await fetch('http://localhost:3001/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
       
@@ -29,10 +33,11 @@ export default function Login() {
         localStorage.setItem('token', data.token);
         router.push('/dashboard');
       } else {
-        setError(data.message);
+        setError(data.message || 'Login failed');
       }
     } catch (error) {
-      setError('Failed to connect to server');
+      console.error('Login error:', error);
+      setError('Failed to connect to server. Please try again.');
     } finally {
       setLoading(false);
     }

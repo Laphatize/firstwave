@@ -17,9 +17,6 @@ if (!fs.existsSync(screenshotsDir)) {
   fs.mkdirSync(screenshotsDir);
 }
 
-let currentBrowser = null;
-let currentPage = null;
-
 // Store active sessions
 const activeSessions = new Map();
 
@@ -158,10 +155,47 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
+// Get session messages
+router.get('/:id/messages', auth, async (req, res) => {
+  const sessionId = req.params.id;
+  const session = activeSessions.get(sessionId);
+  
+  if (!session) {
+    return res.status(404).json({ message: 'Session not found' });
+  }
+
+  // Add initial message if no messages exist
+  if (!session.messages || session.messages.length === 0) {
+    session.messages = [{
+      type: 'system',
+      text: 'Session started. Connecting to LinkedIn...',
+      timestamp: session.lastUpdate || Date.now()
+    }];
+  }
+
+  res.json({ messages: session.messages });
+});
+
 async function startCampaignAutomation(campaign) {
   try {
+    const sessionId = campaign._id.toString();
+    const screenshotPath = path.join(screenshotsDir, `${sessionId}.png`);
+    
+    // Initialize session with empty messages array
+    activeSessions.set(sessionId, {
+      status: 'initializing',
+      messages: [{
+        type: 'system',
+        text: 'Session started. Connecting to LinkedIn...',
+        timestamp: Date.now()
+      }],
+      lastUpdate: Date.now(),
+      lastScreenshotTime: Date.now(),
+      screenshotPromise: null // Add this to track ongoing screenshot operations
+    });
+
     // Message System
-    currentBrowser = await puppeteer.launch({
+    const browser = await puppeteer.launch({
       headless: false,
       startMaximized: true,
       defaultViewport: {
@@ -172,137 +206,225 @@ async function startCampaignAutomation(campaign) {
         "--window-size=1480,720",
         "--no-sandbox",
         "--disable-setuid-sandbox",
+        "--full-screen"
       ],
     });
 
-    let currentPage = await currentBrowser.newPage();
-
-
-    //await currentPage.setViewport({ width: 1480, height: 720 });
-
-
-    let name = campaign.testConfig.recipients[0].name;
-    let company = campaign.testConfig.recipients[0].company;
+    const page = await browser.newPage();
+    let name = campaign.testConfig.recipients[0].name || "N/A";
+    let company = campaign.testConfig.recipients[0].company || "N/A";
     let position = campaign.testConfig.recipients[0].position || "Employee";
     let school = campaign.testConfig.recipients[0].school || "N/A";
     let objective = campaign.objective || "N/A";
 
-    //currentPage = await currentBrowser.newPage();
+    // Update session with browser and page
+    const session = activeSessions.get(sessionId);
+    session.browser = browser;
+    session.page = page;
+    session.screenshotPath = screenshotPath;
+    session.status = 'running';
 
-    // Start screenshot interval
-    const sessionId = campaign._id.toString();
-    const screenshotPath = path.join(screenshotsDir, `${sessionId}.png`);
-    
-    activeSessions.set(sessionId, {
-      browser: currentBrowser,
-      page: currentPage,
-      screenshotPath,
-      status: 'running'
-    });
-
-    // Start screenshot interval
-    const screenshotInterval = setInterval(async () => {
+    // Function to take a screenshot
+    const takeScreenshot = async () => {
       try {
-        if (currentPage) {
-          await currentPage.screenshot({ path: screenshotPath });
+        if (session.page && !session.page.isClosed()) {
+          const currentTime = Date.now();
+          // Reduced time threshold to 100ms for more frequent updates
+          if (currentTime - session.lastScreenshotTime >= 100) {
+            // Wait for any previous screenshot operation to complete
+            if (session.screenshotPromise) {
+              await session.screenshotPromise;
+            }
+            
+            // Start new screenshot operation
+            session.screenshotPromise = session.page.screenshot({ 
+              path: screenshotPath,
+              fullPage: false,
+              type: 'png',
+              quality: 80,
+              omitBackground: true
+            });
+            
+            await session.screenshotPromise;
+            session.lastScreenshotTime = currentTime;
+            session.screenshotPromise = null;
+
+            // Force file system sync to ensure the file is written
+            fs.fsyncSync(fs.openSync(screenshotPath, 'r+'));
+          }
         }
       } catch (error) {
         console.error('Screenshot error:', error);
       }
-    }, 1000);
+    };
+
+    // Take initial screenshot
+    await takeScreenshot();
+
+    // Start screenshot interval with more frequent updates
+    const screenshotInterval = setInterval(takeScreenshot, 100);
 
     try {
-      await currentPage.goto('https://www.linkedin.com/');
+      // Update status message
+      session.messages.push({
+        type: 'system',
+        text: 'Navigating to LinkedIn...',
+        timestamp: Date.now()
+      });
 
-      // Wait for and click the "Sign in" button
-      await currentPage.waitForSelector('.nav__button-secondary');
-      await currentPage.click('.nav__button-secondary');
+      // Force a screenshot after each major action
+      const performActionAndScreenshot = async (action) => {
+        await action();
+        await takeScreenshot();
+      };
 
-      // Wait for the login form and enter credentials
-      await currentPage.waitForSelector('#username');
-      await currentPage.type('#username', process.env.LINKEDIN_EMAIL);
-      await currentPage.type('#password', process.env.LINKEDIN_PASSWORD);
-      await currentPage.click('.btn__primary--large');
+      await performActionAndScreenshot(async () => {
+        await page.goto('https://www.linkedin.com/');
+      });
+
+      await performActionAndScreenshot(async () => {
+        await page.waitForSelector('.nav__button-secondary');
+        await page.click('.nav__button-secondary');
+      });
+
+      await performActionAndScreenshot(async () => {
+        await page.waitForSelector('#username');
+        await page.type('#username', process.env.LINKEDIN_EMAIL);
+        await page.type('#password', process.env.LINKEDIN_PASSWORD);
+        await page.click('.btn__primary--large');
+      });
 
       // Wait for navigation after login
-      await currentPage.waitForNavigation();
+      await performActionAndScreenshot(async () => {
+        await page.waitForNavigation();
+      });
 
       // Navigate to messages
-      await currentPage.goto('https://www.linkedin.com/messaging/');
-      await currentPage.waitForNavigation();
+      await performActionAndScreenshot(async () => {
+        await page.goto('https://www.linkedin.com/messaging/');
+        await page.waitForNavigation();
+      });
+
       // Search for the person
-      await currentPage.waitForSelector('#search-conversations');
-      await currentPage.type('#search-conversations', name);
+      await performActionAndScreenshot(async () => {
+        await page.waitForSelector('#search-conversations');
+        await page.type('#search-conversations', name);
+      });
 
       // Wait for and click on the first conversation in the list
-      await currentPage.waitForSelector('.msg-conversation-listitem__link');
-      await currentPage.click('.msg-conversation-listitem__link');
+      await performActionAndScreenshot(async () => {
+        await page.waitForSelector('.msg-conversation-listitem__link');
+        await page.click('.msg-conversation-listitem__link');
+      });
 
       // Before clicking any button, scroll it into view
-      const conversationItem = await currentPage.waitForSelector('.msg-conversation-listitem__link');
-      await conversationItem.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-      await currentPage.click('.msg-conversation-listitem__link');
+      await performActionAndScreenshot(async () => {
+        const conversationItem = await page.waitForSelector('.msg-conversation-listitem__link');
+        await conversationItem.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+        await page.click('.msg-conversation-listitem__link');
+      });
 
       // Scroll and click message input
-      const messageInput = await currentPage.waitForSelector('.msg-form__contenteditable');
-      await messageInput.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-      await currentPage.type('.msg-form__contenteditable', "Hi, Kshitij. I'm a junior at Penn State looking for internship opportunities in the field of AI and ML.");
+      await performActionAndScreenshot(async () => {
+        const messageInput = await page.waitForSelector('.msg-form__contenteditable');
+        await messageInput.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+        await page.type('.msg-form__contenteditable', `Hi, ${name.split(' ')[0]}. I'm a junior at Penn State looking for internship opportunities in the field of AI and ML.`);
+      });
 
       // Scroll and click send button
-      const sendButton = await currentPage.waitForSelector('.msg-form__send-button');
-      await sendButton.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-      await currentPage.click('.msg-form__send-button');
+      await performActionAndScreenshot(async () => {
+        const sendButton = await page.waitForSelector('.msg-form__send-button');
+        await sendButton.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+        await page.click('.msg-form__send-button');
+      });
 
-      // Initialize conversation history
-      let conversationHistory = [];
+      // Add initial message to conversation
+      const initialMessage = `Hi, ${name.split(' ')[0]}. I'm a junior at Penn State looking for internship opportunities in the field of AI and ML.`;
+      session.messages.push({
+        type: 'sent',
+        text: initialMessage,
+        timestamp: Date.now()
+      });
+
+      // Initialize conversation history with the initial message
+      let conversationHistory = [initialMessage];
 
       while (true) {
         console.log('Waiting for new messages...');
+        await takeScreenshot(); // Take screenshot while waiting
 
         // Wait for and get any new messages
-        await currentPage.waitForSelector('.msg-s-event-listitem__message-bubble');
-        const messages = await currentPage.$$eval('.msg-s-event-listitem__message-bubble', elements =>
-          elements.map(el => ({
-            text: el.innerText,
-            isOther: el.closest('.msg-s-event-listitem--other') !== null
-          }))
-        );
+        await performActionAndScreenshot(async () => {
+          await page.waitForSelector('.msg-s-event-listitem__message-bubble');
+          const messages = await page.$$eval('.msg-s-event-listitem__message-bubble', elements =>
+            elements.map(el => ({
+              text: el.innerText,
+              isOther: el.closest('.msg-s-event-listitem--other') !== null
+            }))
+          );
 
-        // Get the latest message
-        const latestMessage = messages[messages.length - 1];
+          // Get the latest message
+          const latestMessage = messages[messages.length - 1];
 
-        // Only respond if it's a new message from the other person
-        if (latestMessage.isOther && !conversationHistory.includes(latestMessage.text)) {
-          console.log('New message received:', latestMessage.text);
-          conversationHistory.push(latestMessage.text);
+          // Only respond if it's a new message from the other person
+          if (latestMessage.isOther && !conversationHistory.includes(latestMessage.text)) {
+            console.log('New message received:', latestMessage.text);
+            conversationHistory.push(latestMessage.text);
+            
+            // Add message to session
+            session.messages.push({
+              type: 'received',
+              text: latestMessage.text,
+              timestamp: Date.now()
+            });
 
-          // Generate response using GPT-4 API
-          const response = await generateGPTResponse(conversationHistory, name, company, position, school, objective);
+            // Generate response using GPT-4 API
+            const response = await generateGPTResponse(conversationHistory, name, company, position, school, objective);
 
-          // Type and send response
-          await currentPage.waitForSelector('.msg-form__contenteditable');
-          await currentPage.type('.msg-form__contenteditable', response);
-          // wait like 2 sec
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          // Click the send button
-          await currentPage.waitForSelector('.msg-form__send-button');
-          await currentPage.click('.msg-form__send-button');
+            // Add response to session before sending
+            session.messages.push({
+              type: 'sent',
+              text: response,
+              timestamp: Date.now()
+            });
 
-          conversationHistory.push(response);
-          console.log('Response sent:', response);
-        }
+            // Type and send response
+            await page.waitForSelector('.msg-form__contenteditable');
+            await page.type('.msg-form__contenteditable', response);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await page.waitForSelector('.msg-form__send-button');
+            await page.click('.msg-form__send-button');
 
-        // Add a small delay to prevent excessive polling
+            conversationHistory.push(response);
+            console.log('Response sent:', response);
+          }
+        });
+
         await new Promise(resolve => setTimeout(resolve, 1000));
+        await takeScreenshot(); // Take screenshot after each iteration
       }
 
     } catch (error) {
       console.error('An error occurred:', error);
-      activeSessions.get(sessionId).status = 'error';
+      session.status = 'error';
+      session.messages.push({
+        type: 'system',
+        text: 'Error: ' + error.message,
+        timestamp: Date.now()
+      });
     } finally {
       clearInterval(screenshotInterval);
-      activeSessions.get(sessionId).status = 'completed';
-      // Don't close the browser here, let it be handled by the cleanup endpoint
+      const session = activeSessions.get(sessionId);
+      if (session) {
+        session.status = 'completed';
+        session.messages.push({
+          type: 'system',
+          text: 'Session completed',
+          timestamp: Date.now()
+        });
+        // Take one final screenshot
+        await takeScreenshot();
+      }
     }
 
     return { sessionId, status: 'running' };
@@ -324,6 +446,12 @@ router.get('/:id/screenshot', auth, async (req, res) => {
   const screenshotPath = path.join(screenshotsDir, `${sessionId}.png`);
   
   if (fs.existsSync(screenshotPath)) {
+    // Set headers to prevent caching
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
     res.sendFile(screenshotPath);
   } else {
     res.status(404).json({ message: 'Screenshot not found' });
