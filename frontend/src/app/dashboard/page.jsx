@@ -18,6 +18,7 @@ export default function Dashboard() {
     name: '',
     description: '',
     objective: '',
+    linkedinVerified: false,
     testConfig: {
       companyName: '',
       frequency: 'daily',
@@ -247,6 +248,7 @@ export default function Dashboard() {
           name: '',
           description: '',
           objective: '',
+          linkedinVerified: false,
           testConfig: {
             companyName: '',
             frequency: 'daily',
@@ -291,31 +293,10 @@ export default function Dashboard() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Test started with data:', data);
         setTestSessionData(data);
-        
-        // Start polling for updates
-        const interval = setInterval(async () => {
-          const statusResponse = await fetch(
-            `http://localhost:3001/api/campaigns/${campaignId}/test/${data.sessionId}`,
-            {
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-              }
-            }
-          );
-          
-          if (statusResponse.ok) {
-            const sessionData = await statusResponse.json();
-            setTestSessionData(sessionData);
-            
-            if (sessionData.status === 'completed' || sessionData.status === 'error') {
-              clearInterval(interval);
-            }
-          }
-        }, 5000);
-
-        // Clear interval when modal is closed
-        return () => clearInterval(interval);
+      } else {
+        console.error('Failed to start test:', await response.text());
       }
     } catch (error) {
       console.error('Failed to start test:', error);
@@ -627,7 +608,7 @@ export default function Dashboard() {
               </button>
             </div>
           </form>
-        ) : (
+        ) : step === 3 ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-zinc-400 mb-1">
@@ -645,7 +626,6 @@ export default function Dashboard() {
                 />
                 <div className="p-3 bg-zinc-900/50 border border-zinc-700/50 rounded-lg">
                   <div className="flex items-center gap-2 text-amber-400">
-                  
                     <p className="text-sm">
                       Be specific about your objective. This helps the AI better understand what information to seek during the campaign.
                     </p>
@@ -663,8 +643,76 @@ export default function Dashboard() {
                 Back
               </button>
               <button
-                type="submit"
+                type="button"
+                onClick={() => setStep(4)}
                 className="px-4 py-2 text-sm bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors"
+              >
+                Next: Verify LinkedIn
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+            
+              <div className="space-y-3">
+                  <div className=" items-center gap-3">
+                    <div className="flex align-middle justify-center">
+                 <img src="../qr.png" className="w-32 h-32 bg-white p-2 rounded-lg" />
+           <div className=" ml-4 mt-4">
+                 <h1 className="text-zinc-100">Connect with Pranav Ramesh on LinkedIn to continue.</h1>
+                   <button className="mt-2  bg-indigo-500 text-white px-4 py-2 rounded-md" onClick={() => window.open('https://www.linkedin.com/in/pranavramesh2', '_blank')}>Connect</button>
+                   </div>
+                    </div>
+                  
+                  <div className="mt-4">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="linkedinVerified"
+                        checked={campaignData.linkedinVerified}
+                        onChange={(e) => setCampaignData(prev => ({
+                          ...prev,
+                          linkedinVerified: e.target.checked
+                        }))}
+                        className="rounded border-zinc-700 text-indigo-500 focus:ring-indigo-500"
+                      />
+                      <label htmlFor="linkedinVerified" className="text-sm text-zinc-300">
+                        I confirm that I have connected with Pranav Ramesh on LinkedIn
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                  <div className="flex items-center gap-2 text-amber-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-sm">
+                      This step is required to ensure the campaign's effectiveness and authenticity.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setStep(3)}
+                className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-300 transition-colors"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={!campaignData.linkedinVerified}
+                className={`px-4 py-2 text-sm rounded-md transition-colors ${
+                  campaignData.linkedinVerified
+                    ? 'bg-indigo-500 text-white hover:bg-indigo-600'
+                    : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+                }`}
               >
                 Create Campaign
               </button>
@@ -803,7 +851,7 @@ export default function Dashboard() {
             </div>
 
             <div className='space-y-6'>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-zinc-400">Campaign</label>
                   <select
@@ -823,37 +871,11 @@ export default function Dashboard() {
                   </select>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-zinc-400">Name</label>
-                  <input
-                    type="text"
-                    placeholder="Enter recipient name"
-                    className="w-full bg-zinc-900/50 border border-zinc-700/30 rounded-lg px-3 py-2.5 text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-300"
-                  />
-                </div>
+     
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-zinc-400">Email</label>
-                  <div className="relative">
-                    <input
-                      type="email" 
-                      placeholder="recipient@example.com"
-                      className="w-full bg-zinc-900/50 border border-zinc-700/30 rounded-lg pl-10 pr-3 py-2.5 text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-300"
-                    />
-                    <svg 
-                      className="absolute left-3 top-3 w-4 h-4 text-zinc-500"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-                    </svg>
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 gap-6">
+      
 
                 <div className="flex items-end">  
                   <button 
@@ -1006,7 +1028,7 @@ export default function Dashboard() {
               className="relative w-full max-w-md bg-zinc-800 rounded-xl p-6 shadow-xl border border-zinc-700 m-4"
             >
               <h3 className="text-xl font-semibold mb-4">
-                {step === 1 ? 'Create New Campaign' : 'Configure Test Settings'}
+                {step === 1 ? 'Create New Campaign' : step === 2 ? 'Configure Test Settings' : 'Verify LinkedIn'}
               </h3>
               {renderModalContent()}
             </motion.div>

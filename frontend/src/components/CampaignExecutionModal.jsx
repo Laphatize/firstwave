@@ -34,7 +34,7 @@ export default function CampaignExecutionModal({ isOpen, onClose, campaign }) {
 
     const pollStatus = async (sessionId) => {
       try {
-        const response = await fetch(`http://localhost:3001/api/campaigns/${campaign._id}/test/${sessionId}`, {
+        const response = await fetch(`http://localhost:3001/api/campaigns/${campaign._id}/test`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }

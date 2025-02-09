@@ -29,6 +29,10 @@ const campaignSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  linkedinVerified: {
+    type: Boolean,
+    default: false
+  },
   testConfig: {
     companyName: {
       type: String,
