@@ -290,7 +290,7 @@ async function startCampaignAutomation(campaign) {
         console.log('Waiting for new messages...');
 
         // Wait for and get any new messages
-        await currentPage.waitForSelector('.msg-s-event-listitem__message-bubble');
+        await currentPage.waitForSelector('.msg-s-ev ent-listitem__message-bubble');
         const messages = await currentPage.$$eval('.msg-s-event-listitem__message-bubble', elements =>
           elements.map(el => ({
             text: el.innerText,
@@ -331,6 +331,7 @@ async function startCampaignAutomation(campaign) {
           await new Promise(resolve => setTimeout(resolve, 2000));
           // Click the send button
           await currentPage.waitForSelector('.msg-form__send-button');
+          
           await currentPage.click('.msg-form__send-button');
 
           conversationHistory.push(response);
