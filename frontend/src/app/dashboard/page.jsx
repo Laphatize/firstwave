@@ -750,38 +750,36 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-900 p-8 text-zinc-100">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-            <div className="flex items-center gap-2">
-              <svg 
-                className="w-10 h-10 text-white" 
-                xmlns="http://www.w3.org/2000/svg" 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                strokeWidth="2" 
-                stroke="currentColor"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" 
-                />
-              </svg>
-              <span>Firstwave</span>
+    <div className="min-h-screen bg-gradient-to-b from-zinc-900 via-zinc-900 to-zinc-950 p-8 text-zinc-100">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-12">
+          <h1 className="text-4xl font-bold">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/20">
+                <svg 
+                  className="w-8 h-8 text-white" 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  strokeWidth="2" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+                </svg>
+              </div>
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">Firstwave</span>
             </div>
           </h1>
           <button
             onClick={handleLogout}
-            className="px-4 py-2 text-sm bg-red-500/10 text-red-400 rounded-md hover:bg-red-500/20 transition-all duration-300 border border-red-500/20"
+            className="px-4 py-2 text-sm bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-all duration-300 border border-red-500/20 hover:border-red-500/40"
           >
             Logout
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-zinc-800/50 rounded-xl p-8 shadow-xl backdrop-blur-sm border border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-300">
+        <div className="grid grid-cols-3 gap-6">
+          <div className="col-span-2 bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 rounded-2xl p-8 shadow-xl backdrop-blur-sm border border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-300">
             <div className="flex items-start justify-between">
               <div className="space-y-1">
                 <p className="text-sm font-medium text-indigo-400/80">Welcome back</p>
@@ -831,7 +829,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className='bg-zinc-800/50  rounded-xl p-8 shadow-xl backdrop-blur-sm border border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-300'>
+          <div className="bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 rounded-2xl p-8 shadow-xl backdrop-blur-sm border border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-300">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
                 <svg 
@@ -854,21 +852,28 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 gap-6">
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-zinc-400">Campaign</label>
-                  <select
-                    className="w-full bg-zinc-900/50 border border-zinc-700/30 rounded-lg px-3 py-2.5 text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-300"
-                    defaultValue=""
-                    onChange={(e) => {
-                      const selected = campaigns.find(c => c._id === e.target.value);
-                      setSelectedCampaign(selected);
-                    }}
-                  >
-                    <option value="" disabled>Select Campaign</option>
-                    {campaigns.map(campaign => (
-                      <option key={campaign._id} value={campaign._id}>
-                        {campaign.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      className="w-full appearance-none bg-zinc-900/50 border border-zinc-700/30 rounded-lg px-3 py-2.5 text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-300 pr-10"
+                      defaultValue=""
+                      onChange={(e) => {
+                        const selected = campaigns.find(c => c._id === e.target.value);
+                        setSelectedCampaign(selected);
+                      }}
+                    >
+                      <option value="" disabled>Select Campaign</option>
+                      {campaigns.map(campaign => (
+                        <option key={campaign._id} value={campaign._id}>
+                          {campaign.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-zinc-400">
+                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
 
      
@@ -919,24 +924,46 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="mt-4 bg-zinc-800/50 rounded-xl p-8 shadow-xl backdrop-blur-sm border border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-300">
+        <div className="mt-6 bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 rounded-2xl p-8 shadow-xl backdrop-blur-sm border border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-300">
           <div className="flex justify-between items-center text-zinc-400">
-            <h2 className="text-2xl font-semibold mb-4 text-zinc-100">
-              Active Campaigns
-            </h2>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-tr from-indigo-600/10 to-purple-600/10 rounded-xl border border-indigo-500/20">
+                <svg 
+                  className="w-5 h-5 text-indigo-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-semibold text-zinc-100">Active Campaigns</h2>
+            </div>
             <button 
               onClick={() => setShowModal(true)}
-              className="bg-indigo-500/10 text-indigo-400 rounded-md px-4 py-2 hover:bg-indigo-500/20 transition-all duration-300 border border-indigo-500/20"
+              className="group px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 flex items-center gap-2"
             >
-              Create New Campaign
+              <svg 
+                className="w-4 h-4 text-white transition-transform duration-300 group-hover:rotate-90"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              <span className="text-white font-medium">New Campaign</span>
             </button>
           </div>
 
-          <div className="mt-6 space-y-4">
+          <div className="mt-6 grid grid-cols-2 gap-4">
             {campaigns.map(campaign => (
               <div 
                 key={campaign._id}
-                className="bg-zinc-900/50 rounded-lg p-4 border border-zinc-700/30 hover:border-zinc-600/30 transition-all duration-300"
+                className="group bg-gradient-to-br from-zinc-900/50 to-zinc-950/50 rounded-xl p-6 border border-zinc-800/50 hover:border-indigo-500/20 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/5"
               >
                 <div className="flex justify-between items-start">
                   <div>
@@ -1006,8 +1033,6 @@ export default function Dashboard() {
             )}
           </div>
         </div>
-
-
       </div>
 
       <AnimatePresence mode="wait">

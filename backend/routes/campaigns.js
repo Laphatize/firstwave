@@ -6,6 +6,8 @@ const puppeteer = require('puppeteer');
 const OpenAI = require("openai");
 const path = require('path');
 const fs = require('fs');
+const PDFDocument = require('pdfkit');
+let conversationHistory = [];
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -16,6 +18,9 @@ const screenshotsDir = path.join(__dirname, '../screenshots');
 if (!fs.existsSync(screenshotsDir)) {
   fs.mkdirSync(screenshotsDir);
 }
+
+let currentBrowser = null;
+let currentPage = null;
 
 // Store active sessions
 const activeSessions = new Map();
@@ -77,6 +82,10 @@ router.get('/', auth, async (req, res) => {
     console.error('Error fetching campaigns:', error);
     res.status(500).json({ message: 'Error fetching campaigns' });
   }
+});
+
+router.get('/history', auth, async (req, res) => {
+  res.json({ messages: session.messages || [] });
 });
 
 // Get a specific campaign
@@ -155,7 +164,7 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
-// Get session messages
+// Get message history for a session
 router.get('/:id/messages', auth, async (req, res) => {
   const sessionId = req.params.id;
   const session = activeSessions.get(sessionId);
@@ -164,267 +173,192 @@ router.get('/:id/messages', auth, async (req, res) => {
     return res.status(404).json({ message: 'Session not found' });
   }
 
-  // Add initial message if no messages exist
-  if (!session.messages || session.messages.length === 0) {
-    session.messages = [{
-      type: 'system',
-      text: 'Session started. Connecting to LinkedIn...',
-      timestamp: session.lastUpdate || Date.now()
-    }];
-  }
-
-  res.json({ messages: session.messages });
+  res.json({ messages: session.messages || [] });
 });
 
 async function startCampaignAutomation(campaign) {
   try {
-    const sessionId = campaign._id.toString();
-    const screenshotPath = path.join(screenshotsDir, `${sessionId}.png`);
-    
-    // Initialize session with empty messages array
-    activeSessions.set(sessionId, {
-      status: 'initializing',
-      messages: [{
-        type: 'system',
-        text: 'Session started. Connecting to LinkedIn...',
-        timestamp: Date.now()
-      }],
-      lastUpdate: Date.now(),
-      lastScreenshotTime: Date.now(),
-      screenshotPromise: null // Add this to track ongoing screenshot operations
-    });
+    // Connect to existing Chrome instance if possible, otherwise launch new browser
+    if (!currentBrowser) {
+      try {
+        currentBrowser = await puppeteer.connect({
+          browserURL: 'http://localhost:9222',
+          defaultViewport: {
+            width: 1480,
+            height: 900,
+            deviceScaleFactor: 1,
+          }
+        });
+      } catch (err) {
+        console.log('Could not connect to existing Chrome, launching new instance:', err);
+        currentBrowser = await puppeteer.launch({
+          headless: false,
+          defaultViewport: null,
+          args: ['--start-maximized', '--disable-notifications']
+        });
+      }
+    }
 
-    // Message System
-    const browser = await puppeteer.launch({
-      headless: false,
-      startMaximized: true,
-      defaultViewport: {
-        width: 1480,
-        height: 800
-      },
-      args: [
-        "--window-size=1480,720",
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--full-screen"
-      ],
-    });
+    let currentPage = await currentBrowser.newPage();
 
-    const page = await browser.newPage();
+
     let name = campaign.testConfig.recipients[0].name || "N/A";
     let company = campaign.testConfig.recipients[0].company || "N/A";
     let position = campaign.testConfig.recipients[0].position || "Employee";
     let school = campaign.testConfig.recipients[0].school || "N/A";
     let objective = campaign.objective || "N/A";
 
-    // Update session with browser and page
-    const session = activeSessions.get(sessionId);
-    session.browser = browser;
-    session.page = page;
-    session.screenshotPath = screenshotPath;
-    session.status = 'running';
+    // Start screenshot interval
+    const sessionId = campaign._id.toString();
+    const screenshotPath = path.join(screenshotsDir, `${sessionId}.png`);
+    
+    activeSessions.set(sessionId, {
+      browser: currentBrowser,
+      page: currentPage,
+      screenshotPath,
+      status: 'running',
+      messages: [], // Initialize empty messages array
+    });
 
-    // Function to take a screenshot
-    const takeScreenshot = async () => {
+    // Start screenshot interval
+    const screenshotInterval = setInterval(async () => {
       try {
-        if (session.page && !session.page.isClosed()) {
-          const currentTime = Date.now();
-          // Reduced time threshold to 100ms for more frequent updates
-          if (currentTime - session.lastScreenshotTime >= 100) {
-            // Wait for any previous screenshot operation to complete
-            if (session.screenshotPromise) {
-              await session.screenshotPromise;
-            }
-            
-            // Start new screenshot operation
-            session.screenshotPromise = session.page.screenshot({ 
-              path: screenshotPath,
-              fullPage: false,
-              type: 'png',
-              quality: 80,
-              omitBackground: true
-            });
-            
-            await session.screenshotPromise;
-            session.lastScreenshotTime = currentTime;
-            session.screenshotPromise = null;
-
-            // Force file system sync to ensure the file is written
-            fs.fsyncSync(fs.openSync(screenshotPath, 'r+'));
-          }
+        if (currentPage) {
+          await currentPage.screenshot({ path: screenshotPath });
         }
       } catch (error) {
         console.error('Screenshot error:', error);
       }
-    };
-
-    // Take initial screenshot
-    await takeScreenshot();
-
-    // Start screenshot interval with more frequent updates
-    const screenshotInterval = setInterval(takeScreenshot, 100);
+    }, 1000);
 
     try {
-      // Update status message
+      await currentPage.goto('https://www.linkedin.com/messaging/');
+   //   await currentPage.waitForNavigation();
+
+      // Add system message for session start
+      const session = activeSessions.get(sessionId);
       session.messages.push({
         type: 'system',
-        text: 'Navigating to LinkedIn...',
-        timestamp: Date.now()
-      });
-
-      // Force a screenshot after each major action
-      const performActionAndScreenshot = async (action) => {
-        await action();
-        await takeScreenshot();
-      };
-
-      await performActionAndScreenshot(async () => {
-        await page.goto('https://www.linkedin.com/');
-      });
-
-      await performActionAndScreenshot(async () => {
-        await page.waitForSelector('.nav__button-secondary');
-        await page.click('.nav__button-secondary');
-      });
-
-      await performActionAndScreenshot(async () => {
-        await page.waitForSelector('#username');
-        await page.type('#username', process.env.LINKEDIN_EMAIL);
-        await page.type('#password', process.env.LINKEDIN_PASSWORD);
-        await page.click('.btn__primary--large');
-      });
-
-      // Wait for navigation after login
-      await performActionAndScreenshot(async () => {
-        await page.waitForNavigation();
-      });
-
-      // Navigate to messages
-      await performActionAndScreenshot(async () => {
-        await page.goto('https://www.linkedin.com/messaging/');
-        await page.waitForNavigation();
+        text: 'Session started - Navigating to LinkedIn Messages',
+        timestamp: new Date().toISOString()
       });
 
       // Search for the person
-      await performActionAndScreenshot(async () => {
-        await page.waitForSelector('#search-conversations');
-        await page.type('#search-conversations', name);
+      await currentPage.waitForSelector('#search-conversations');
+      await currentPage.type('#search-conversations', name);
+
+      session.messages.push({
+        type: 'system',
+        text: `Searching for conversation with ${name}`,
+        timestamp: new Date().toISOString()
       });
 
       // Wait for and click on the first conversation in the list
-      await performActionAndScreenshot(async () => {
-        await page.waitForSelector('.msg-conversation-listitem__link');
-        await page.click('.msg-conversation-listitem__link');
-      });
+      await currentPage.waitForSelector('.msg-conversation-listitem__link');
+      await currentPage.click('.msg-conversation-listitem__link');
 
       // Before clicking any button, scroll it into view
-      await performActionAndScreenshot(async () => {
-        const conversationItem = await page.waitForSelector('.msg-conversation-listitem__link');
-        await conversationItem.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-        await page.click('.msg-conversation-listitem__link');
-      });
+      const conversationItem = await currentPage.waitForSelector('.msg-conversation-listitem__link');
+      await conversationItem.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+      await currentPage.click('.msg-conversation-listitem__link');
 
       // Scroll and click message input
-      await performActionAndScreenshot(async () => {
-        const messageInput = await page.waitForSelector('.msg-form__contenteditable');
-        await messageInput.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-        await page.type('.msg-form__contenteditable', `Hi, ${name.split(' ')[0]}. I'm a junior at Penn State looking for internship opportunities in the field of AI and ML.`);
-      });
-
-      // Scroll and click send button
-      await performActionAndScreenshot(async () => {
-        const sendButton = await page.waitForSelector('.msg-form__send-button');
-        await sendButton.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-        await page.click('.msg-form__send-button');
-      });
-
-      // Add initial message to conversation
+      const messageInput = await currentPage.waitForSelector('.msg-form__contenteditable');
+      await messageInput.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
       const initialMessage = `Hi, ${name.split(' ')[0]}. I'm a junior at Penn State looking for internship opportunities in the field of AI and ML.`;
+      await currentPage.type('.msg-form__contenteditable', initialMessage);
+
+      // Add the sent message to history
       session.messages.push({
         type: 'sent',
         text: initialMessage,
-        timestamp: Date.now()
+        timestamp: new Date().toISOString()
       });
 
-      // Initialize conversation history with the initial message
-      let conversationHistory = [initialMessage];
+      // Scroll and click send button
+      const sendButton = await currentPage.waitForSelector('.msg-form__send-button');
+      await sendButton.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+
+      // Wait for a second before clicking send
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await currentPage.click('.msg-form__send-button');
+
+      // Initialize conversation history for GPT
+      let conversationHistory = [];
 
       while (true) {
         console.log('Waiting for new messages...');
-        await takeScreenshot(); // Take screenshot while waiting
 
         // Wait for and get any new messages
-        await performActionAndScreenshot(async () => {
-          await page.waitForSelector('.msg-s-event-listitem__message-bubble');
-          const messages = await page.$$eval('.msg-s-event-listitem__message-bubble', elements =>
-            elements.map(el => ({
-              text: el.innerText,
-              isOther: el.closest('.msg-s-event-listitem--other') !== null
-            }))
-          );
+        await currentPage.waitForSelector('.msg-s-event-listitem__message-bubble');
+        const messages = await currentPage.$$eval('.msg-s-event-listitem__message-bubble', elements =>
+          elements.map(el => ({
+            text: el.innerText,
+            isOther: el.closest('.msg-s-event-listitem--other') !== null
+          }))
+        );
 
-          // Get the latest message
-          const latestMessage = messages[messages.length - 1];
+        // Get the latest message
+        const latestMessage = messages[messages.length - 1];
 
-          // Only respond if it's a new message from the other person
-          if (latestMessage.isOther && !conversationHistory.includes(latestMessage.text)) {
-            console.log('New message received:', latestMessage.text);
-            conversationHistory.push(latestMessage.text);
-            
-            // Add message to session
-            session.messages.push({
-              type: 'received',
-              text: latestMessage.text,
-              timestamp: Date.now()
-            });
+        // Only respond if it's a new message from the other person
+        if (latestMessage.isOther && !conversationHistory.includes(latestMessage.text)) {
+          console.log('New message received:', latestMessage.text);
+          conversationHistory.push(latestMessage.text);
 
-            // Generate response using GPT-4 API
-            const response = await generateGPTResponse(conversationHistory, name, company, position, school, objective);
+          // Add received message to session history
+          session.messages.push({
+            type: 'received',
+            text: latestMessage.text,
+            timestamp: new Date().toISOString()
+          });
 
-            // Add response to session before sending
-            session.messages.push({
-              type: 'sent',
-              text: response,
-              timestamp: Date.now()
-            });
+          // Generate response using GPT-4 API
+          const response = await generateGPTResponse(conversationHistory, name, company, position, school, objective);
 
-            // Type and send response
-            await page.waitForSelector('.msg-form__contenteditable');
-            await page.type('.msg-form__contenteditable', response);
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            await page.waitForSelector('.msg-form__send-button');
-            await page.click('.msg-form__send-button');
+          // Type and send response
+          await currentPage.waitForSelector('.msg-form__contenteditable');
+          await currentPage.type('.msg-form__contenteditable', response);
+          
+          // Add sent message to session history
+          session.messages.push({
+            type: 'sent',
+            text: response,
+            timestamp: new Date().toISOString()
+          });
 
-            conversationHistory.push(response);
-            console.log('Response sent:', response);
-          }
-        });
+          // wait like 2 sec
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          // Click the send button
+          await currentPage.waitForSelector('.msg-form__send-button');
+          await currentPage.click('.msg-form__send-button');
 
+          conversationHistory.push(response);
+          console.log('Response sent:', response);
+        }
+
+        // Add a small delay to prevent excessive polling
         await new Promise(resolve => setTimeout(resolve, 1000));
-        await takeScreenshot(); // Take screenshot after each iteration
       }
 
     } catch (error) {
       console.error('An error occurred:', error);
+      const session = activeSessions.get(sessionId);
       session.status = 'error';
       session.messages.push({
         type: 'system',
-        text: 'Error: ' + error.message,
-        timestamp: Date.now()
+        text: `Error: ${error.message}`,
+        timestamp: new Date().toISOString()
       });
     } finally {
       clearInterval(screenshotInterval);
       const session = activeSessions.get(sessionId);
-      if (session) {
-        session.status = 'completed';
-        session.messages.push({
-          type: 'system',
-          text: 'Session completed',
-          timestamp: Date.now()
-        });
-        // Take one final screenshot
-        await takeScreenshot();
-      }
+      session.status = 'completed';
+      session.messages.push({
+        type: 'system',
+        text: 'Session completed',
+        timestamp: new Date().toISOString()
+      });
     }
 
     return { sessionId, status: 'running' };
@@ -446,12 +380,6 @@ router.get('/:id/screenshot', auth, async (req, res) => {
   const screenshotPath = path.join(screenshotsDir, `${sessionId}.png`);
   
   if (fs.existsSync(screenshotPath)) {
-    // Set headers to prevent caching
-    res.set({
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    });
     res.sendFile(screenshotPath);
   } else {
     res.status(404).json({ message: 'Screenshot not found' });
@@ -572,6 +500,187 @@ router.get('/:id/test', auth, async (req, res) => {
   } catch (error) {
     console.error('Error getting test status:', error);
     res.status(500).json({ message: 'Error getting test status' });
+  }
+});
+
+// Generate AI analysis report for a session
+router.get('/:id/analysis', auth, async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const session = activeSessions.get(sessionId);
+    
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    const messages = session.messages || [];
+    
+    // Prepare conversation history for analysis
+    const conversationText = messages
+      .map(msg => `${msg.type.toUpperCase()}: ${msg.text}`)
+      .join('\n');
+
+    // Generate analysis using GPT-4
+    const completion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: "You are a security analyst reviewing a phishing test conversation. Analyze the effectiveness of the attempt and what information was successfully collected. Focus on: 1) Information gathered about the company 2) Potential security vulnerabilities revealed 3) Social engineering tactics used 4) Recommendations for security improvements."
+        },
+        {
+          role: "user",
+          content: `Please analyze this conversation from a phishing test and provide a detailed report:\n\n${conversationText}`
+        }
+      ],
+      model: "gpt-4",
+    });
+
+    const analysis = completion.choices[0].message.content;
+
+    // Structure the response
+    const report = {
+      timestamp: new Date().toISOString(),
+      sessionId,
+      messageCount: messages.length,
+      analysis,
+      conversationSummary: conversationText
+    };
+
+    res.json(report);
+  } catch (error) {
+    console.error('Error generating analysis:', error);
+    res.status(500).json({ message: 'Error generating analysis report' });
+  }
+});
+
+// Handle follow-up questions about the analysis
+router.post('/:id/analysis/followup', auth, async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const { question } = req.body;
+    const session = activeSessions.get(sessionId);
+    
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    const messages = session.messages || [];
+    
+    // Prepare conversation history for context
+    const conversationText = messages
+      .map(msg => `${msg.type.toUpperCase()}: ${msg.text}`)
+      .join('\n');
+
+    // Generate follow-up analysis using GPT-4
+    const completion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: "You are a security analyst reviewing a phishing test conversation. You will answer follow-up questions about the conversation and its security implications. Be specific and reference actual parts of the conversation when relevant. Format your response in markdown for better readability."
+        },
+        {
+          role: "user",
+          content: `Here is the conversation to analyze:\n\n${conversationText}\n\nFollow-up question: ${question}`
+        }
+      ],
+      model: "gpt-4",
+    });
+
+    const analysis = completion.choices[0].message.content;
+
+    res.json({
+      timestamp: new Date().toISOString(),
+      question,
+      answer: analysis
+    });
+  } catch (error) {
+    console.error('Error generating follow-up analysis:', error);
+    res.status(500).json({ message: 'Error generating follow-up analysis' });
+  }
+});
+
+// Generate PDF report for analysis
+router.get('/:id/analysis/pdf', auth, async (req, res) => {
+  try {
+    const sessionId = req.params.id;
+    const session = activeSessions.get(sessionId);
+    
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    const messages = session.messages || [];
+    
+    // Prepare conversation history for analysis
+    const conversationText = messages
+      .map(msg => `${msg.type.toUpperCase()}: ${msg.text}`)
+      .join('\n');
+
+    // Generate analysis using GPT-4
+    const completion = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content: "You are a security analyst reviewing a phishing test conversation. Analyze the effectiveness of the attempt and what information was successfully collected. Focus on: 1) Information gathered about the company 2) Potential security vulnerabilities revealed 3) Social engineering tactics used 4) Recommendations for security improvements."
+        },
+        {
+          role: "user",
+          content: `Please analyze this conversation from a phishing test and provide a detailed report:\n\n${conversationText}`
+        }
+      ],
+      model: "gpt-4",
+    });
+
+    const analysis = completion.choices[0].message.content;
+
+    // Create PDF document
+    const doc = new PDFDocument();
+    
+    // Set response headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=phishing-analysis-${sessionId}.pdf`);
+    
+    // Pipe the PDF document to the response
+    doc.pipe(res);
+
+    // Add content to PDF
+    doc
+      .fontSize(20)
+      .text('Phishing Test Analysis Report', { align: 'center' })
+      .moveDown(2);
+
+    doc
+      .fontSize(12)
+      .text(`Generated: ${new Date().toLocaleString()}`)
+      .text(`Session ID: ${sessionId}`)
+      .text(`Messages Analyzed: ${messages.length}`)
+      .moveDown(2);
+
+    doc
+      .fontSize(16)
+      .text('Analysis', { underline: true })
+      .moveDown(1);
+
+    doc
+      .fontSize(12)
+      .text(analysis)
+      .moveDown(2);
+
+    doc
+      .fontSize(16)
+      .text('Conversation History', { underline: true })
+      .moveDown(1);
+
+    doc
+      .fontSize(12)
+      .text(conversationText);
+
+    // Finalize PDF
+    doc.end();
+
+  } catch (error) {
+    console.error('Error generating PDF analysis:', error);
+    res.status(500).json({ message: 'Error generating PDF analysis report' });
   }
 });
 

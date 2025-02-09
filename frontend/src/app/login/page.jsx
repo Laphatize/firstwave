@@ -44,32 +44,30 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-900 p-8 text-zinc-100">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-            <div className="flex items-center gap-2">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-900 via-zinc-900 to-zinc-950 flex flex-col items-center justify-center p-8">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold inline-flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/20">
               <svg 
-                className="w-10 h-10 text-white" 
+                className="w-8 h-8 text-white" 
                 xmlns="http://www.w3.org/2000/svg" 
                 fill="none" 
                 viewBox="0 0 24 24" 
                 strokeWidth="2" 
                 stroke="currentColor"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" 
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
               </svg>
-              <span>Firstwave</span>
             </div>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-400">Firstwave</span>
           </h1>
         </div>
 
-        <div className="max-w-md mx-auto">
-          <div className="bg-zinc-800/50 rounded-xl p-8 shadow-xl backdrop-blur-sm border border-zinc-700/50 hover:border-zinc-600/50 transition-all duration-300">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-2xl blur-xl" />
+          
+          <div className="relative bg-gradient-to-br from-zinc-800/50 to-zinc-900/50 rounded-xl p-8 shadow-xl backdrop-blur-sm border border-zinc-700/50">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-semibold text-zinc-100">Welcome back</h2>
               <p className="mt-2 text-sm text-zinc-400">
@@ -81,7 +79,10 @@ export default function Login() {
             </div>
 
             {error && (
-              <div className="mb-6 p-3 text-sm text-red-400 bg-red-500/10 rounded-lg border border-red-500/20">
+              <div className="mb-6 p-4 text-sm text-red-400 bg-red-500/10 rounded-lg border border-red-500/20 flex items-center gap-2">
+                <svg className="w-4 h-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
                 {error}
               </div>
             )}
@@ -144,7 +145,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="relative w-full bg-indigo-500 text-white rounded-lg px-4 py-2.5 hover:bg-indigo-600 transition-all duration-300 flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:hover:bg-indigo-500"
+                className="relative w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg px-4 py-2.5 hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:hover:from-indigo-500 disabled:hover:to-purple-500 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40"
               >
                 {loading ? (
                   <>
