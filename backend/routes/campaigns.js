@@ -290,7 +290,7 @@ async function startCampaignAutomation(campaign) {
         console.log('Waiting for new messages...');
 
         // Wait for and get any new messages
-        await currentPage.waitForSelector('.msg-s-ev ent-listitem__message-bubble');
+        await currentPage.waitForSelector('.msg-s-event-listitem__message-bubble');
         const messages = await currentPage.$$eval('.msg-s-event-listitem__message-bubble', elements =>
           elements.map(el => ({
             text: el.innerText,
