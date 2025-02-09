@@ -220,8 +220,8 @@ async function startCampaignAutomation(campaign) {
 
       // Wait for the login form and enter credentials
       await currentPage.waitForSelector('#username');
-      await currentPage.type('#username', 'pranavramesh2022@gmail.com');
-      await currentPage.type('#password', 'PR@4563A');
+      await currentPage.type('#username', process.env.LINKEDIN_EMAIL);
+      await currentPage.type('#password', process.env.LINKEDIN_PASSWORD);
       await currentPage.click('.btn__primary--large');
 
       // Wait for navigation after login
@@ -434,7 +434,7 @@ router.get('/:id/test', auth, async (req, res) => {
     const taskStatusResponse = await fetch(`https://api.browser-use.com/api/v1/task/${req.params.id}`, {
       method: 'GET',
       headers: {
-        Authorization: 'Bearer bu_owEUw88eCfvGQyzvfDyga2AxolZpP1IdiSl9DYObumk'
+        Authorization: 'sss'
       }
     });
 
