@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import CampaignExecutionModal from '@/components/CampaignExecutionModal';
+import TestExecutionModal from '@/components/TestExecutionModal';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const [campaignData, setCampaignData] = useState({
     name: '',
     description: '',
+    objective: '',
     testConfig: {
       companyName: '',
       frequency: 'daily',
@@ -31,6 +33,8 @@ export default function Dashboard() {
   const [showExecutionModal, setShowExecutionModal] = useState(false);
   const [currentSession, setCurrentSession] = useState(null);
   const [selectedCampaign, setSelectedCampaign] = useState(null);
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [testSessionData, setTestSessionData] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -71,7 +75,7 @@ export default function Dashboard() {
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
-        setLoading(false);
+        setLoading(false);                                                                                                                                                                                                                                                                                                                                                                                                                          
       }
     };
 
@@ -242,6 +246,7 @@ export default function Dashboard() {
         setCampaignData({
           name: '',
           description: '',
+          objective: '',
           testConfig: {
             companyName: '',
             frequency: 'daily',
@@ -276,6 +281,7 @@ export default function Dashboard() {
     if (!campaignId) return;
     
     try {
+      setShowTestModal(true);
       const response = await fetch(`http://localhost:3001/api/campaigns/${campaignId}/test`, {
         method: 'POST',
         headers: {
@@ -285,7 +291,7 @@ export default function Dashboard() {
 
       if (response.ok) {
         const data = await response.json();
-        setCurrentSession(data);
+        setTestSessionData(data);
         
         // Start polling for updates
         const interval = setInterval(async () => {
@@ -300,22 +306,25 @@ export default function Dashboard() {
           
           if (statusResponse.ok) {
             const sessionData = await statusResponse.json();
-            setCurrentSession(sessionData);
+            setTestSessionData(sessionData);
             
             if (sessionData.status === 'completed' || sessionData.status === 'error') {
               clearInterval(interval);
             }
           }
         }, 5000);
+
+        // Clear interval when modal is closed
+        return () => clearInterval(interval);
       }
     } catch (error) {
       console.error('Failed to start test:', error);
     }
   };
 
-  const handleCampaignClick = (campaign) => {
+  const handleTestButtonClick = (campaign) => {
+    if (!campaign) return;
     setSelectedCampaign(campaign);
-    setShowExecutionModal(true);
     handleRunTest(campaign._id);
   };
 
@@ -374,7 +383,7 @@ export default function Dashboard() {
               </button>
             </div>
           </form>
-        ) : (
+        ) : step === 2 ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-4">
               <div>
@@ -610,6 +619,50 @@ export default function Dashboard() {
                 Back
               </button>
               <button
+                type="button"
+                onClick={() => setStep(3)}
+                className="px-4 py-2 text-sm bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors"
+              >
+                Next: Set Objective
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-1">
+                Campaign Objective
+              </label>
+              <div className="space-y-3">
+                <textarea
+                  name="objective"
+                  value={campaignData.objective}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 bg-zinc-900/50 border border-zinc-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  rows="6"
+                  placeholder="Describe what information or access you want the AI to obtain through social engineering (e.g., 'Gain access to internal documentation' or 'Obtain information about the company's security protocols')"
+                  required
+                />
+                <div className="p-3 bg-zinc-900/50 border border-zinc-700/50 rounded-lg">
+                  <div className="flex items-center gap-2 text-amber-400">
+                  
+                    <p className="text-sm">
+                      Be specific about your objective. This helps the AI better understand what information to seek during the campaign.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setStep(2)}
+                className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-300 transition-colors"
+              >
+                Back
+              </button>
+              <button
                 type="submit"
                 className="px-4 py-2 text-sm bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors"
               >
@@ -625,7 +678,25 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-900">
-        <div className="text-lg text-zinc-100">Loading...</div>
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+            <div className="flex items-center gap-2">
+              <svg 
+                className="w-10 h-10 text-white" 
+                xmlns="http://www.w3.org/2000/svg" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                strokeWidth="2" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" 
+                />
+              </svg>
+              <span>Firstwave</span>
+            </div>
+          </h1>
       </div>
     );
   }
@@ -738,6 +809,10 @@ export default function Dashboard() {
                   <select
                     className="w-full bg-zinc-900/50 border border-zinc-700/30 rounded-lg px-3 py-2.5 text-zinc-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all duration-300"
                     defaultValue=""
+                    onChange={(e) => {
+                      const selected = campaigns.find(c => c._id === e.target.value);
+                      setSelectedCampaign(selected);
+                    }}
                   >
                     <option value="" disabled>Select Campaign</option>
                     {campaigns.map(campaign => (
@@ -782,9 +857,13 @@ export default function Dashboard() {
 
                 <div className="flex items-end">  
                   <button 
-                    onClick={() => handleRunTest(selectedCampaign?._id)}
-                    disabled={isTestRunning}
-                    className="relative w-full bg-indigo-500 text-white rounded-lg px-4 py-2.5 hover:bg-indigo-600 transition-all duration-300 flex items-center justify-center gap-2 font-medium overflow-hidden"
+                    onClick={() => handleTestButtonClick(selectedCampaign)}
+                    disabled={isTestRunning || !selectedCampaign}
+                    className={`relative w-full ${
+                      !selectedCampaign 
+                        ? 'bg-indigo-500/50 cursor-not-allowed' 
+                        : 'bg-indigo-500 hover:bg-indigo-600'
+                    } text-white rounded-lg px-4 py-2.5 transition-all duration-300 flex items-center justify-center gap-2 font-medium overflow-hidden`}
                   >
                     {isTestRunning && (
                       <div className="absolute inset-0 bg-indigo-600">
@@ -841,6 +920,11 @@ export default function Dashboard() {
                   <div>
                     <h3 className="text-lg font-medium text-zinc-100">{campaign.name}</h3>
                     <p className="text-sm text-zinc-400 mt-1">{campaign.description}</p>
+                    {campaign.objective && (
+                      <p className="text-sm text-indigo-400 mt-2">
+                        <span className="font-medium">Objective:</span> {campaign.objective}
+                      </p>
+                    )}
                     <div className="flex items-center gap-4 mt-3">
                       <div className="flex items-center gap-1.5 text-sm text-zinc-500">
                         <svg
@@ -930,10 +1014,15 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      <CampaignExecutionModal
-        isOpen={showExecutionModal}
-        onClose={() => setShowExecutionModal(false)}
+      <TestExecutionModal
+        isOpen={showTestModal}
+        onClose={() => {
+          setShowTestModal(false);
+          setTestSessionData(null);
+          setSelectedCampaign(null);
+        }}
         campaign={selectedCampaign}
+        sessionData={testSessionData}
       />
 
       <style jsx>{`

@@ -25,6 +25,10 @@ const campaignSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  objective: {
+    type: String,
+    required: true,
+  },
   testConfig: {
     companyName: {
       type: String,
@@ -60,7 +64,11 @@ const campaignSchema = new mongoose.Schema({
   },
   nextRun: {
     type: Date
-  }
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 }, {
   timestamps: true
 });
