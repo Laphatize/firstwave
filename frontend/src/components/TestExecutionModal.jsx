@@ -1,3 +1,12 @@
+/*
+
+
+ THIS IS WHAT IS BEING USED FOR THE TEST A CAMPAIGN FEATURE 
+ DO NOT CONFUSE WITH CAMPAIGN EXECUTION MODAL (ACCESSED VIA NEW CAMPAIGN BUTTON)
+*/
+
+
+
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -30,6 +39,7 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [videoStream, setVideoStream] = useState(null);
   const videoRef = useRef(null);
+  const [isEndingCampaign, setIsEndingCampaign] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -101,24 +111,45 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
     }
   };
 
-  const generateReport = async () => {
+  // Merged function to generate and download report
+  const generateAndDownloadReport = async () => {
     if (!sessionData?.sessionId) return;
     
     setIsGeneratingReport(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/campaigns/${sessionData.sessionId}/analysis`, {
+      // First generate the report
+      const analysisResponse = await fetch(`http://localhost:3001/api/campaigns/${sessionData.sessionId}/analysis`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (analysisResponse.ok) {
+        const data = await analysisResponse.json();
         setReport(data);
         setShowReport(true);
+
+        // Then immediately download the PDF
+        const pdfResponse = await fetch(`http://localhost:3001/api/campaigns/${sessionData.sessionId}/analysis/pdf`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (pdfResponse.ok) {
+          const blob = await pdfResponse.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `phishing-analysis-${sessionData.sessionId}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }
       }
     } catch (error) {
-      console.error('Error generating report:', error);
+      console.error('Error generating and downloading report:', error);
     } finally {
       setIsGeneratingReport(false);
     }
@@ -151,32 +182,26 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
     }
   };
 
-  const downloadPdfReport = async () => {
+  // Add end campaign function
+  const endCampaign = async () => {
     if (!sessionData?.sessionId) return;
     
-    setIsDownloadingPdf(true);
+    setIsEndingCampaign(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/campaigns/${sessionData.sessionId}/analysis/pdf`, {
+      const response = await fetch(`http://localhost:3001/api/campaigns/${sessionData.sessionId}/end`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
 
       if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `phishing-analysis-${sessionData.sessionId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        onClose(); // Close the modal after successfully ending the campaign
       }
     } catch (error) {
-      console.error('Error downloading PDF:', error);
+      console.error('Error ending campaign:', error);
     } finally {
-      setIsDownloadingPdf(false);
+      setIsEndingCampaign(false);
     }
   };
 
@@ -209,14 +234,16 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
 
   useEffect(() => {
     if (isOpen) {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then(stream => {
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            setVideoStream(stream);
-          }
-        })
-        .catch(err => console.error('Error accessing camera:', err));
+
+      setInterval(async () => {
+        const screenshot = await fetch(`http://localhost:3001/api/campaigns/screenshot/${sessionData.sessionId}`);
+
+        if (screenshot.ok) {
+    
+          setVideoStream(url);
+        }
+
+      }, 1000);
     } else if (videoStream) {
       // Cleanup video stream when modal closes
       videoStream.getTracks().forEach(track => track.stop());
@@ -260,21 +287,49 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
                         <p className="text-zinc-400 mt-1">{campaign?.objective}</p>
                         <p className="text-xs text-zinc-500 mt-1">Session ID: {sessionData?.sessionId}</p>
                       </div>
-                      <button
-                        onClick={onClose}
-                        className="p-2 text-zinc-400 hover:text-zinc-300 transition-colors"
-                      >
-                        <svg
-                          className="w-6 h-6"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={endCampaign}
+                          disabled={isEndingCampaign || !sessionData?.sessionId}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            isEndingCampaign || !sessionData?.sessionId
+                              ? 'bg-zinc-800/50 text-zinc-500 cursor-not-allowed'
+                              : 'bg-red-500 text-white hover:bg-red-600'
+                          }`}
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
+                          {isEndingCampaign ? (
+                            <>
+                              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Ending...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                              End Campaign
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={onClose}
+                          className="p-2 text-zinc-400 hover:text-zinc-300 transition-colors"
+                        >
+                          <svg
+                            className="w-6 h-6"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.5}
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -285,8 +340,8 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
                       <h3 className="text-lg font-medium text-zinc-100">Live Preview</h3>
                       <div className="aspect-video w-full bg-zinc-800/50 rounded-lg border border-zinc-700/50 overflow-hidden">
                         {isOpen ? (
-                          <video
-                            ref={videoRef}
+                          <img
+                            src={videoStream}
                             autoPlay
                             playsInline
                             className="w-full h-full object-cover"
@@ -303,7 +358,7 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
                     <div className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/50">
                       <div className="flex items-center gap-4">
                         <button
-                          onClick={generateReport}
+                          onClick={generateAndDownloadReport}
                           disabled={isGeneratingReport || !sessionData?.sessionId}
                           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                             isGeneratingReport || !sessionData?.sessionId
@@ -317,46 +372,17 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                               </svg>
-                              Generating...
+                              Generating Report...
                             </>
                           ) : (
                             <>
                               <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                               </svg>
-                              Generate Report
+                              Generate & Download Report
                             </>
                           )}
                         </button>
-
-                        {report && (
-                          <button
-                            onClick={downloadPdfReport}
-                            disabled={isDownloadingPdf}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                              isDownloadingPdf
-                                ? 'bg-zinc-800/50 text-zinc-500 cursor-not-allowed'
-                                : 'bg-green-500 text-white hover:bg-green-600'
-                            }`}
-                          >
-                            {isDownloadingPdf ? (
-                              <>
-                                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Downloading...
-                              </>
-                            ) : (
-                              <>
-                                <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                                </svg>
-                                Download PDF
-                              </>
-                            )}
-                          </button>
-                        )}
                       </div>
                     </div>
                   </div>
