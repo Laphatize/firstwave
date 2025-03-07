@@ -78,7 +78,7 @@ export default function CampaignExecutionModal({ isOpen, onClose, campaign }) {
           <div className="space-y-6">
             {status === 'initializing' && (
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mb-4" />
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mb-4" />
                 <p className="text-zinc-400">Initializing campaign test...</p>
               </div>
             )}
@@ -106,7 +106,7 @@ export default function CampaignExecutionModal({ isOpen, onClose, campaign }) {
                       href={session.viewerUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-indigo-400 hover:text-indigo-300 text-sm"
+                      className="text-red-400 hover:text-red-300 text-sm"
                     >
                       Open Steel Session Viewer
                     </a>

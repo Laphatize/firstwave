@@ -179,10 +179,8 @@ router.get('/:id/messages', auth, async (req, res) => {
 async function startCampaignAutomation(campaign) {
   try {
     // Connect to existing Chrome instance if possible, otherwise launch new browser
-    if (!currentBrowser) {
-      try {
-        currentBrowser = await puppeteer.connect({
-          browserURL: 'http://localhost:9222',
+
+        currentBrowser = await puppeteer.launch({
           headless: true,
           defaultViewport: {
             width: 1480,
@@ -191,15 +189,10 @@ async function startCampaignAutomation(campaign) {
 
           }
         });
-      } catch (err) {
-        console.log('Could not connect to existing Chrome, launching new instance:', err);
-        currentBrowser = await puppeteer.launch({
-          headless: false,
-          defaultViewport: null,
-          args: ['--start-maximized', '--disable-notifications']
-        });
-      }
-    }
+      
+    
+     
+      
 
     let currentPage = await currentBrowser.newPage();
 
@@ -211,11 +204,13 @@ async function startCampaignAutomation(campaign) {
     let objective = campaign.objective || "N/A";
 
 
-    console.log (`Screenshot loop started for ${sessionId}`);
 
     // Start screenshot interval
     const sessionId = campaign._id.toString();
     const screenshotPath = path.join(screenshotsDir, `${sessionId}.png`);
+
+    console.log (`Screenshot loop started for ${sessionId}`);
+
     
     activeSessions.set(sessionId, {
       browser: currentBrowser,

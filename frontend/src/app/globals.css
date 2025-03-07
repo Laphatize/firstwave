@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes binaryFlicker {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .binary-text {
+    animation: binaryFlicker 0.2s infinite;
+    font-family: monospace;
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.5s ease-in;
+  }

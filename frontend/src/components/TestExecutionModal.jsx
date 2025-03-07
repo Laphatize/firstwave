@@ -48,7 +48,7 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
   const getMessageStyle = (type) => {
     switch (type) {
       case 'sent':
-        return 'items-end bg-indigo-500/10 border border-indigo-500/20';
+        return 'items-end bg-red-500/10 border border-red-500/20';
       case 'received':
         return 'items-start bg-zinc-700/30 border border-zinc-600/20';
       case 'system':
@@ -237,17 +237,11 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
 
       setInterval(async () => {
         const screenshot = await fetch(`http://localhost:3001/api/campaigns/screenshot/${sessionData.sessionId}`);
-
-        if (screenshot.ok) {
-    
-          setVideoStream(url);
-        }
+        console.log(screenshot);
+        setVideoStream(screenshot);
+ 
 
       }, 1000);
-    } else if (videoStream) {
-      // Cleanup video stream when modal closes
-      videoStream.getTracks().forEach(track => track.stop());
-      setVideoStream(null);
     }
   }, [isOpen]);
 
@@ -342,13 +336,11 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
                         {isOpen ? (
                           <img
                             src={videoStream}
-                            autoPlay
-                            playsInline
                             className="w-full h-full object-cover"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <p className="text-zinc-500">Camera preview unavailable</p>
+                            <p className="text-zinc-500">Connecting to stream...</p>
                           </div>
                         )}
                       </div>
@@ -363,7 +355,7 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
                           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                             isGeneratingReport || !sessionData?.sessionId
                               ? 'bg-zinc-800/50 text-zinc-500 cursor-not-allowed'
-                              : 'bg-indigo-500 text-white hover:bg-indigo-600'
+                              : 'bg-red-500 text-white hover:bg-red-600'
                           }`}
                         >
                           {isGeneratingReport ? (
