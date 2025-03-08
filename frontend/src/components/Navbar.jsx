@@ -20,12 +20,6 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
 ];
 
-const organizations = [
-  { id: 1, name: 'Security Team', href: '#', initial: 'S', current: false },
-  { id: 2, name: 'Development', href: '#', initial: 'D', current: false },
-  { id: 3, name: 'Operations', href: '#', initial: 'O', current: false },
-];
-
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
@@ -90,29 +84,6 @@ export default function Navbar({ user, sidebarOpen, setSidebarOpen, handleLogout
                           ))}
                         </ul>
                       </li>
-                      <li>
-                        <div className="text-xs font-semibold leading-6 text-neutral-400">Your organizations</div>
-                        <ul role="list" className="-mx-2 mt-2 space-y-1">
-                          {organizations.map((org) => (
-                            <li key={org.name}>
-                              <Link
-                                href={org.href}
-                                className={classNames(
-                                  org.current
-                                    ? 'bg-neutral-800 text-white'
-                                    : 'text-neutral-400 hover:bg-neutral-800 hover:text-white',
-                                  'group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6',
-                                )}
-                              >
-                                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 text-[0.625rem] font-medium text-neutral-400 group-hover:text-white">
-                                  {org.initial}
-                                </span>
-                                <span className="truncate">{org.name}</span>
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </li>
                       <li className="-mx-6 mt-auto">
                         <button
                           onClick={handleLogout}
@@ -163,29 +134,6 @@ export default function Navbar({ user, sidebarOpen, setSidebarOpen, handleLogout
                       >
                         <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
                         {item.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-              <li>
-                <div className="text-xs font-semibold leading-6 text-neutral-400">Your organizations</div>
-                <ul role="list" className="-mx-2 mt-2 space-y-1">
-                  {organizations.map((org) => (
-                    <li key={org.name}>
-                      <Link
-                        href={org.href}
-                        className={classNames(
-                          org.current
-                            ? 'bg-neutral-800 text-white'
-                            : 'text-neutral-400 hover:bg-neutral-800 hover:text-white',
-                          'group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6',
-                        )}
-                      >
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 text-[0.625rem] font-medium text-neutral-400 group-hover:text-white">
-                          {org.initial}
-                        </span>
-                        <span className="truncate">{org.name}</span>
                       </Link>
                     </li>
                   ))}

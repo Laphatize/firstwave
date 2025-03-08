@@ -28,7 +28,7 @@ export default function Register() {
       
       if (res.ok) {
         localStorage.setItem('token', data.token);
-        router.push('/dashboard');
+        router.push('/setup');
       } else {
         setError(data.message);
       }

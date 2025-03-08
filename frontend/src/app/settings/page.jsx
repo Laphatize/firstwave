@@ -18,6 +18,12 @@ export default function Settings() {
   const [organizations, setOrganizations] = useState([]);
   const [showOrgModal, setShowOrgModal] = useState(false);
   const [newOrg, setNewOrg] = useState({ name: '', description: '' });
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordError, setPasswordError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -89,6 +95,43 @@ export default function Settings() {
       }
     } catch (error) {
       console.error('Failed to create organization:', error);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3001/api/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      });
+
+      if (response.ok) {
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        setPasswordError('');
+        // Add success message handling here
+      } else {
+        const data = await response.json();
+        setPasswordError(data.message || 'Failed to change password');
+      }
+    } catch (error) {
+      console.error('Failed to change password:', error);
+      setPasswordError('An error occurred while changing password');
     }
   };
 
@@ -165,9 +208,74 @@ export default function Settings() {
                               type="email"
                               value={user?.email}
                               disabled
-                              className="block w-full rounded-md border-0 bg-neutral-800/50 py-1.5 text-white shadow-sm ring-1 ring-inset ring-neutral-700 focus:ring-2 focus:ring-inset focus:ring-red-500 sm:text-sm sm:leading-6"
+                              className="block w-full rounded-md border-0 bg-neutral-800/50 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-700 focus:ring-2 focus:ring-inset focus:ring-red-500 sm:text-sm sm:leading-6"
                             />
                           </div>
+                        </div>
+
+                        {/* New Password Change Section */}
+                        <div className="sm:col-span-4">
+                          <label htmlFor="currentPassword" className="block text-sm font-medium leading-6 text-white">
+                            Current Password
+                          </label>
+                          <div className="mt-2">
+                            <input
+                              id="currentPassword"
+                              name="currentPassword"
+                              type="password"
+                              value={passwordForm.currentPassword}
+                              onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                              className="block w-full rounded-md border-0 bg-neutral-800/50 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-700 focus:ring-2 focus:ring-inset focus:ring-red-500 sm:text-sm sm:leading-6"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-4">
+                          <label htmlFor="newPassword" className="block text-sm font-medium leading-6 text-white">
+                            New Password
+                          </label>
+                          <div className="mt-2">
+                            <input
+                              id="newPassword"
+                              name="newPassword"
+                              type="password"
+                              value={passwordForm.newPassword}
+                              onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                              className="block w-full rounded-md border-0 bg-neutral-800/50 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-700 focus:ring-2 focus:ring-inset focus:ring-red-500 sm:text-sm sm:leading-6"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-4">
+                          <label htmlFor="confirmPassword" className="block text-sm font-medium leading-6 text-white">
+                            Confirm New Password
+                          </label>
+                          <div className="mt-2">
+                            <input
+                              id="confirmPassword"
+                              name="confirmPassword"
+                              type="password"
+                              value={passwordForm.confirmPassword}
+                              onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                              className="block w-full rounded-md border-0 bg-neutral-800/50 py-1.5 px-3 text-white shadow-sm ring-1 ring-inset ring-neutral-700 focus:ring-2 focus:ring-inset focus:ring-red-500 sm:text-sm sm:leading-6"
+                            />
+                          </div>
+                        </div>
+
+                        {passwordError && (
+                          <div className="mt-2 text-sm text-red-500">
+                            {passwordError}
+                          </div>
+                        )}
+
+                        <div className="sm:col-span-4">
+                          <button
+                            type="button"
+                            onClick={handlePasswordChange}
+                            className="rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                          >
+                            Change Password
+                          </button>
                         </div>
                       </div>
                     </div>

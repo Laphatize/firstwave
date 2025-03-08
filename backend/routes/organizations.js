@@ -44,6 +44,84 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
+// Generate an invite code for an organization
+router.post('/:id/invite', auth, async (req, res) => {
+  try {
+    const { expiresInHours = 24, maxUses = 1 } = req.body;
+
+    const organization = await Organization.findOne({
+      _id: req.params.id,
+      $or: [
+        { owner: req.user._id },
+        { 'members.user': req.user._id, 'members.role': 'admin' }
+      ]
+    });
+
+    if (!organization) {
+      return res.status(404).json({ message: 'Organization not found or unauthorized' });
+    }
+
+    // Clean up expired codes before generating new one
+    organization.cleanupInviteCodes();
+
+    const inviteCode = organization.generateInviteCode(
+      req.user._id,
+      expiresInHours,
+      maxUses
+    );
+
+    await organization.save();
+
+    res.json({ code: inviteCode });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Join an organization using an invite code
+router.post('/join', auth, async (req, res) => {
+  try {
+    const { inviteCode } = req.body;
+
+    // Find organization with matching invite code
+    const organization = await Organization.findOne({
+      'inviteCodes.code': inviteCode
+    });
+
+    if (!organization) {
+      return res.status(404).json({ message: 'Invalid invite code' });
+    }
+
+    // Check if user is already a member
+    if (
+      organization.owner.equals(req.user._id) ||
+      organization.members.some(member => member.user.equals(req.user._id))
+    ) {
+      return res.status(400).json({ message: 'You are already a member of this organization' });
+    }
+
+    // Validate and use the invite code
+    if (!organization.useInviteCode(inviteCode)) {
+      return res.status(400).json({ message: 'Invalid or expired invite code' });
+    }
+
+    // Add user as member
+    organization.members.push({
+      user: req.user._id,
+      role: 'member'
+    });
+
+    await organization.save();
+    
+    await organization.populate('owner', 'email');
+    await organization.populate('members.user', 'email');
+
+    res.json(organization);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // Get a specific organization
 router.get('/:id', auth, async (req, res) => {
   try {

@@ -3,28 +3,29 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ChartBarSquareIcon,
-  Cog6ToothIcon,
-  FolderIcon,
-  ServerIcon,
-  SignalIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
-import { Bars3Icon, MagnifyingGlassIcon } from '@heroicons/react/20/solid';
+import { Bars3Icon } from '@heroicons/react/20/solid';
+import { BuildingOfficeIcon, PlusIcon } from '@heroicons/react/24/outline';
 import Navbar from '@/components/Navbar';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
 }
 
-export default function Tests() {
+export default function TestSuites() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tests, setTests] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedTest, setSelectedTest] = useState(null);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [tests, setTests] = useState([]);
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [newTest, setNewTest] = useState({ 
+    name: '', 
+    description: '', 
+    type: 'credential_harvest',
+    targetGroups: [],
+    emailTemplate: '',
+    landingPage: '',
+    schedule: 'immediate'
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -36,7 +37,6 @@ export default function Tests() {
 
     const fetchUserAndTests = async () => {
       try {
-        // Fetch user data
         const userRes = await fetch('http://localhost:3001/api/me', {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -77,110 +77,27 @@ export default function Tests() {
     router.push('/login');
   };
 
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return 'text-green-400 bg-green-400/10';
-      case 'running':
-        return 'text-blue-400 bg-blue-400/10';
-      case 'failed':
-        return 'text-red-400 bg-red-400/10';
-      default:
-        return 'text-neutral-400 bg-neutral-400/10';
+  const handleCreateTest = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch('http://localhost:3001/api/tests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(newTest)
+      });
+      
+      if (response.ok) {
+        const createdTest = await response.json();
+        setTests(prev => [...prev, createdTest]);
+        setShowTestModal(false);
+        setNewTest({ name: '', description: '', type: 'credential_harvest', targetGroups: [], emailTemplate: '', landingPage: '', schedule: 'immediate' });
+      }
+    } catch (error) {
+      console.error('Failed to create test:', error);
     }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const renderTestDetails = () => {
-    if (!selectedTest) return null;
-
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center">
-              <ServerIcon className="w-5 h-5 text-red-500" />
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-white">{selectedTest.campaign.name}</h4>
-              <p className="text-xs text-neutral-400">{selectedTest.campaign.testConfig.companyName}</p>
-            </div>
-          </div>
-          <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-full ${getStatusColor(selectedTest.status)}`}>
-            <div className="h-2 w-2 rounded-full bg-current" />
-            <span className="text-xs font-medium capitalize">{selectedTest.status}</span>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <div className="bg-neutral-900/50 rounded-lg p-4">
-            <h5 className="text-sm font-medium text-white mb-2">Test Progress</h5>
-            <div className="space-y-2">
-              {selectedTest.steps.map((step, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  {step.completed ? (
-                    <svg className="w-4 h-4 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  ) : step.inProgress ? (
-                    <div className="w-4 h-4 relative">
-                      <div className="absolute inset-0 rounded-full border-2 border-red-500 border-r-transparent animate-spin" />
-                    </div>
-                  ) : (
-                    <div className="w-4 h-4 rounded-full border-2 border-neutral-700" />
-                  )}
-                  <span className="text-sm text-neutral-200">{step.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-neutral-900/50 rounded-lg p-4">
-            <h5 className="text-sm font-medium text-white mb-2">Test Results</h5>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-neutral-400">Success Rate</span>
-                <span className="text-sm text-neutral-200">{selectedTest.results.successRate}%</span>
-              </div>
-              <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-red-500 rounded-full transition-all duration-500" 
-                  style={{ width: `${selectedTest.results.successRate}%` }} 
-                />
-              </div>
-            </div>
-          </div>
-
-          {selectedTest.results.findings.length > 0 && (
-            <div className="bg-neutral-900/50 rounded-lg p-4">
-              <h5 className="text-sm font-medium text-white mb-2">Findings</h5>
-              <div className="space-y-2">
-                {selectedTest.results.findings.map((finding, index) => (
-                  <div key={index} className="flex items-start gap-2 p-2 rounded-lg bg-neutral-800/50">
-                    <div className={`flex-shrink-0 w-6 h-6 rounded-full ${finding.severity === 'high' ? 'bg-red-500/10 text-red-500' : finding.severity === 'medium' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-blue-500/10 text-blue-500'} flex items-center justify-center`}>
-                      <span className="text-xs font-medium">{finding.severity.charAt(0).toUpperCase()}</span>
-                    </div>
-                    <div>
-                      <p className="text-sm text-neutral-200">{finding.description}</p>
-                      <p className="text-xs text-neutral-400 mt-1">{finding.details}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
   };
 
   if (loading) {
@@ -226,90 +143,97 @@ export default function Tests() {
               <span className="sr-only">Open sidebar</span>
               <Bars3Icon className="h-5 w-5" aria-hidden="true" />
             </button>
-
-            <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-              <form className="flex flex-1" action="#" method="GET">
-                <label htmlFor="search-field" className="sr-only">
-                  Search
-                </label>
-                <div className="relative w-full">
-                  <MagnifyingGlassIcon
-                    className="pointer-events-none absolute inset-y-0 left-0 h-full w-5 text-neutral-500"
-                    aria-hidden="true"
-                  />
-                  <input
-                    id="search-field"
-                    className="block h-full w-full border-0 bg-transparent py-0 pl-8 pr-0 text-white focus:ring-0 sm:text-sm"
-                    placeholder="Search tests..."
-                    type="search"
-                    name="search"
-                  />
-                </div>
-              </form>
-            </div>
           </div>
 
-          <main className="lg:pr-96">
-            <header className="flex items-center justify-between border-b border-white/5 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-              <h1 className="text-base font-semibold leading-7 text-white">Tests</h1>
+          <main>
+            <header className="border-b border-white/5 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+              <h1 className="text-base font-semibold leading-7 text-white">Phishing Campaigns</h1>
+              <p className="mt-1 text-sm leading-6 text-neutral-400">
+                Configure and manage your phishing simulation campaigns.
+              </p>
             </header>
 
-            {/* Test list */}
             <div className="divide-y divide-white/5">
-              {tests.map((test) => (
-                <div
-                  key={test._id}
-                  className="group px-4 py-6 sm:px-6 lg:px-8 hover:bg-neutral-800/50 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-x-3">
-                      <div className={`flex-none rounded-full p-1 ${getStatusColor(test.status)}`}>
-                        <div className="h-2 w-2 rounded-full bg-current" />
-                      </div>
-                      <h2 className="min-w-0 text-sm font-semibold leading-6 text-white">
-                        <div className="flex gap-x-2">
-                          <span className="truncate">{test.campaign.name}</span>
-                          <span className="text-neutral-400">/</span>
-                          <span className="whitespace-nowrap">{test.campaign.testConfig.companyName}</span>
+              <div className="px-4 py-6 sm:px-6 lg:px-8">
+                <div className="mx-auto">
+                  <div className="space-y-12">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h2 className="text-base font-semibold leading-7 text-white">Campaign Configurations</h2>
+                          <p className="mt-1 text-sm leading-6 text-neutral-400">
+                            Set up and customize your phishing test scenarios.
+                          </p>
                         </div>
-                      </h2>
+                        <button
+                          onClick={() => setShowTestModal(true)}
+                          className="flex items-center gap-2 rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600"
+                        >
+                          <PlusIcon className="h-4 w-4" />
+                          New Campaign
+                        </button>
+                      </div>
+
+                      <div className="mt-6 divide-y divide-white/5">
+                        {tests.map((test) => (
+                          <div key={test.id} className="py-4">
+                            <div className="flex items-center gap-4">
+                              <div className="h-12 w-12 flex items-center justify-center rounded-lg bg-red-500/10 text-red-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                                </svg>
+                              </div>
+                              <div>
+                                <h3 className="text-sm font-medium text-white">{test.name}</h3>
+                                <p className="text-sm text-neutral-400">{test.description}</p>
+                                <div className="flex gap-2 mt-2">
+                                  <span className="inline-flex items-center rounded-md bg-red-400/10 px-2 py-1 text-xs font-medium text-red-400 ring-1 ring-inset ring-red-400/20">
+                                    {test.type}
+                                  </span>
+                                  {test.schedule && (
+                                    <span className="inline-flex items-center rounded-md bg-neutral-400/10 px-2 py-1 text-xs font-medium text-neutral-400 ring-1 ring-inset ring-neutral-400/20">
+                                      {test.schedule}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="ml-auto flex gap-2">
+                                <button className="rounded-md bg-neutral-800 px-3 py-2 text-sm font-medium text-white hover:bg-neutral-700">
+                                  Edit
+                                </button>
+                                <button className="rounded-md bg-red-500 px-3 py-2 text-sm font-medium text-white hover:bg-red-600">
+                                  Launch Campaign
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        {tests.length === 0 && (
+                          <div className="py-4 text-center">
+                            <p className="text-sm text-neutral-400">No campaign configurations yet</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex flex-none items-center gap-x-4">
-                      <button
-                        onClick={() => {
-                          setSelectedTest(test);
-                          setShowDetailsModal(true);
-                        }}
-                        className="hidden rounded-md bg-red-500 px-2.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-red-600 group-hover:block"
-                      >
-                        View Details
-                      </button>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex items-center gap-x-2.5 text-xs leading-5 text-neutral-400">
-                    <p className="truncate capitalize">{test.status}</p>
-                    <svg viewBox="0 0 2 2" className="h-0.5 w-0.5 flex-none fill-neutral-300">
-                      <circle cx={1} cy={1} r={1} />
-                    </svg>
-                    <p className="whitespace-nowrap">{formatDate(test.startedAt)}</p>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
           </main>
         </div>
       </div>
 
-      {/* Test Details Modal */}
-      <AnimatePresence mode="wait">
-        {showDetailsModal && (
+      {/* New Test Modal */}
+      <AnimatePresence>
+        {showTestModal && (
           <div className="fixed inset-0 flex items-center justify-center z-50">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-              onClick={() => setShowDetailsModal(false)}
+              onClick={() => setShowTestModal(false)}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.75, y: 20 }}
@@ -318,15 +242,94 @@ export default function Tests() {
               transition={{ type: "spring", duration: 0.5 }}
               className="relative w-full max-w-md bg-neutral-800 rounded-xl p-6 shadow-xl border border-neutral-700 m-4"
             >
-              <div className="absolute top-4 right-4">
-                <button
-                  onClick={() => setShowDetailsModal(false)}
-                  className="text-neutral-400 hover:text-neutral-300 transition-colors"
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              </div>
-              {renderTestDetails()}
+              <h3 className="text-xl font-semibold mb-4 text-white">Create New Campaign Configuration</h3>
+              <form onSubmit={handleCreateTest} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-1">
+                    Campaign Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newTest.name}
+                    onChange={(e) => setNewTest(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2 bg-neutral-900/50 border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="Enter campaign name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    value={newTest.description}
+                    onChange={(e) => setNewTest(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full px-3 py-2 bg-neutral-900/50 border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    rows="3"
+                    placeholder="Describe the campaign objectives and target audience"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-1">
+                    Attack Type
+                  </label>
+                  <select
+                    value={newTest.type}
+                    onChange={(e) => setNewTest(prev => ({ ...prev, type: e.target.value }))}
+                    className="w-full px-3 py-2 bg-neutral-900/50 border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="credential_harvest">Credential Harvest</option>
+                    <option value="data_entry">Data Entry</option>
+                    <option value="attachment">Malicious Attachment</option>
+                    <option value="link_click">Link Click</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-1">
+                    Email Template
+                  </label>
+                  <select
+                    value={newTest.emailTemplate}
+                    onChange={(e) => setNewTest(prev => ({ ...prev, emailTemplate: e.target.value }))}
+                    className="w-full px-3 py-2 bg-neutral-900/50 border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="">Select a template</option>
+                    <option value="password_reset">Password Reset</option>
+                    <option value="invoice">Invoice Payment</option>
+                    <option value="document_share">Document Share</option>
+                    <option value="custom">Custom Template</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-1">
+                    Schedule
+                  </label>
+                  <select
+                    value={newTest.schedule}
+                    onChange={(e) => setNewTest(prev => ({ ...prev, schedule: e.target.value }))}
+                    className="w-full px-3 py-2 bg-neutral-900/50 border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    <option value="immediate">Launch Immediately</option>
+                    <option value="scheduled">Schedule for Later</option>
+                    <option value="staged">Staged Rollout</option>
+                  </select>
+                </div>
+                <div className="flex justify-end gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowTestModal(false)}
+                    className="px-4 py-2 text-sm text-neutral-400 hover:text-neutral-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                  >
+                    Create Campaign
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}
