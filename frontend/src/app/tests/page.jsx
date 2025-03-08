@@ -90,7 +90,6 @@ export default function TestSuites() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        ,
         body: JSON.stringify(newTest)
       });
       
