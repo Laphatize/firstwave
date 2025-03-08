@@ -179,38 +179,38 @@ router.get('/:id/messages', auth, async (req, res) => {
 async function startCampaignAutomation(campaign) {
   try {
     // Connect to existing Chrome instance if possible, otherwise launch new browser
-    if (!currentBrowser) {
-      try {
-        currentBrowser = await puppeteer.connect({
-          browserURL: 'http://localhost:9222',
+
+        currentBrowser = await puppeteer.launch({
+          headless: true,
           defaultViewport: {
             width: 1480,
             height: 900,
             deviceScaleFactor: 1,
+
           }
         });
-      } catch (err) {
-        console.log('Could not connect to existing Chrome, launching new instance:', err);
-        currentBrowser = await puppeteer.launch({
-          headless: false,
-          defaultViewport: null,
-          args: ['--start-maximized', '--disable-notifications']
-        });
-      }
-    }
+      
+    
+     
+      
 
     let currentPage = await currentBrowser.newPage();
 
 
     let name = campaign.testConfig.recipients[0].name || "N/A";
-    let company = campaign.testConfig.recipients[0].company || "N/A";
+    let company = campaign.testConfig.companyName || "N/A";
     let position = campaign.testConfig.recipients[0].position || "Employee";
     let school = campaign.testConfig.recipients[0].school || "N/A";
     let objective = campaign.objective || "N/A";
 
+
+
     // Start screenshot interval
     const sessionId = campaign._id.toString();
     const screenshotPath = path.join(screenshotsDir, `${sessionId}.png`);
+
+    console.log (`Screenshot loop started for ${sessionId}`);
+
     
     activeSessions.set(sessionId, {
       browser: currentBrowser,
@@ -227,6 +227,7 @@ async function startCampaignAutomation(campaign) {
           await currentPage.screenshot({ path: screenshotPath });
         }
       } catch (error) {
+        console.log("Loop error");
         console.error('Screenshot error:', error);
       }
     }, 1000);
@@ -370,7 +371,8 @@ async function startCampaignAutomation(campaign) {
 }
 
 // Get latest screenshot
-router.get('/:id/screenshot', auth, async (req, res) => {
+// This is using the session ID
+router.get('/screenshot/:id', auth, async (req, res) => {
   const sessionId = req.params.id;
   const session = activeSessions.get(sessionId);
   
@@ -444,6 +446,7 @@ router.post('/:id/test', auth, async (req, res) => {
 
 async function generateGPTResponse(conversationHistory, name, company, position, school, objective) {
   try {
+    
     // Format conversation history into messages array
     const messages = conversationHistory.map((msg, index) => ({
       role: index % 2 === 0 ? "user" : "assistant",
@@ -465,6 +468,7 @@ async function generateGPTResponse(conversationHistory, name, company, position,
       objective: objective || "N/A"
     };
 
+    console.log(personInfo);
     // Add a prompt to guide the AI
     messages.push({
       role: "user",
