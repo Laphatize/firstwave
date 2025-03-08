@@ -45,7 +45,7 @@ export default function Register() {
         <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
           <div className="mx-auto w-full max-w-sm lg:w-96">
             <div>
-              <img onClick={() => router.push('/')} src="https://www.vyvern.com/trans_logo.png" alt="Vyvern Logo" className="h-8 w-auto"/>
+              <img onClick={() => router.push('/')} src="../" alt="Vyvern Logo" className="h-8 w-auto"/>
               <h2 className="text-2xl font-bold tracking-tight text-white">Create your account</h2>
               <p className="mt-2 text-sm text-zinc-400">
                 Already have an account?{' '}
