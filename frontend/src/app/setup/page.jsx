@@ -153,7 +153,7 @@ function IntroScreen({ onComplete }) {
               stiffness: 100
             }}
           >
-            <img src="https://www.vyvern.com/trans_logo.png" alt="Vyvern Logo" className="w-40" />
+            <img src="../" alt="Vyvern Logo" className="w-40" />
           </motion.div>
         </motion.div>
       </div>
@@ -308,7 +308,7 @@ export default function Setup() {
             transition={{ duration: 0.5, delay: 1.6 }}
           >
             <motion.img 
-              src="https://www.vyvern.com/trans_logo.png" 
+              src="../" 
               alt="Vyvern Logo" 
               className="w-40 mx-auto"
               initial={{ scale: 0.8, opacity: 0 }}

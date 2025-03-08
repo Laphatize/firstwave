@@ -59,7 +59,7 @@ export default function Header() {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center">
               <Link href="/" className="flex items-center">
-                <img src="https://www.vyvern.com/trans_logo.png" alt="Vyvern Logo" className="h-8 w-auto"/>
+                <img src="../trans_logo.png" alt="Vyvern Logo" className="h-8 w-auto"/>
               </Link>
             </div>
             
@@ -130,7 +130,7 @@ export default function Header() {
 
       <div className="mx-auto max-w-7xl px-6 pt-10 pb-24 sm:pb-32 lg:flex lg:px-8 lg:py-40">
         <div className="mx-auto max-w-3xl shrink-0 lg:mx-0 lg:pt-8 mt-20">
-          <img src="https://www.vyvern.com/trans_logo.png" className="w-32" />
+          <img src="../trans_logo.png" className="w-32" />
           <h1 className="text-5xl font-semibold tracking-tight text-pretty text-white">
             Secure Your <span className="relative inline-block px-2">
               <span className="absolute inset-0 bg-red-600 px-10 rounded-lg transform"></span>
