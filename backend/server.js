@@ -9,6 +9,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const campaignRoutes = require('./routes/campaigns');
 const companyRoutes = require('./routes/company');
+const organizationRoutes = require('./routes/organizations');
 
 const app = express();
 
@@ -35,6 +36,7 @@ mongoose.connect(process.env.MONGODB_URI)
 // Routes
 app.use('/api', authRoutes);
 app.use('/api/campaigns', campaignRoutes);
+app.use('/api/organizations', organizationRoutes);
 app.use('/api/company', companyRoutes);
 
 // Error handling middleware

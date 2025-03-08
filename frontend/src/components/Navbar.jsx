@@ -57,7 +57,7 @@ export default function Navbar({ user, sidebarOpen, setSidebarOpen, handleLogout
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-neutral-900 px-6 ring-1 ring-white/10">
                   <div className="flex h-16 shrink-0 items-center">
                     <img
-                      src="../"
+                      src="../trans_logo.png"
                       alt="Vyvern"
                       className="h-8 w-auto"
                     />
@@ -112,7 +112,7 @@ export default function Navbar({ user, sidebarOpen, setSidebarOpen, handleLogout
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-neutral-950/50 px-6 ring-1 ring-white/5">
           <div className="flex h-16 shrink-0 items-center">
             <img
-              src="../"
+              src="../trans_logo.png"
               alt="Vyvern"
               className="h-8 w-auto"
             />
