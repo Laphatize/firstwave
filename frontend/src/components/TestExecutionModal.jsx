@@ -63,7 +63,7 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
     if (!sessionData?.sessionId) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/campaigns/${sessionData.sessionId}/messages`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${sessionData.sessionId}/messages`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -93,7 +93,7 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
     
     setIsSyncing(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/campaigns/${sessionData.sessionId}/messages`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${sessionData.sessionId}/messages`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -118,7 +118,7 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
     setIsGeneratingReport(true);
     try {
       // First generate the report
-      const analysisResponse = await fetch(`http://localhost:3001/api/campaigns/${sessionData.sessionId}/analysis`, {
+      const analysisResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${sessionData.sessionId}/analysis`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -130,7 +130,7 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
         setShowReport(true);
 
         // Then immediately download the PDF
-        const pdfResponse = await fetch(`http://localhost:3001/api/campaigns/${sessionData.sessionId}/analysis/pdf`, {
+        const pdfResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${sessionData.sessionId}/analysis/pdf`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -161,7 +161,7 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
     
     setIsAskingFollowUp(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/campaigns/${sessionData.sessionId}/analysis/followup`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${sessionData.sessionId}/analysis/followup`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -188,7 +188,7 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
     
     setIsEndingCampaign(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/campaigns/${sessionData.sessionId}/end`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${sessionData.sessionId}/end`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -236,7 +236,7 @@ export default function TestExecutionModal({ isOpen, onClose, campaign, sessionD
     if (isOpen) {
 
       setInterval(async () => {
-        const screenshot = await fetch(`http://localhost:3001/api/campaigns/screenshot/${sessionData.sessionId}`);
+        const screenshot = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/screenshot/${sessionData.sessionId}`);
         console.log(screenshot);
         setVideoStream(screenshot);
  

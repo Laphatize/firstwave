@@ -14,7 +14,7 @@ export default function CampaignExecutionModal({ isOpen, onClose, campaign }) {
 
     const startSession = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/api/campaigns/${campaign._id}/test`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${campaign._id}/test`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -34,7 +34,7 @@ export default function CampaignExecutionModal({ isOpen, onClose, campaign }) {
 
     const pollStatus = async (sessionId) => {
       try {
-        const response = await fetch(`http://localhost:3001/api/campaigns/${campaign._id}/test`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${campaign._id}/test`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }

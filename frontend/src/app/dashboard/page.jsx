@@ -72,7 +72,7 @@ export default function Dashboard() {
     const fetchUserAndCampaigns = async () => {
       try {
         // Fetch user data
-        const userRes = await fetch('http://localhost:3001/api/me', {
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -83,7 +83,7 @@ export default function Dashboard() {
           setUser(userData);
 
           // Fetch campaigns
-          const campaignsRes = await fetch('http://localhost:3001/api/campaigns', {
+          const campaignsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -142,7 +142,7 @@ export default function Dashboard() {
 
     setCompanySearchLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/company/search?name=${encodeURIComponent(value)}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/company/search?name=${encodeURIComponent(value)}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -193,7 +193,7 @@ export default function Dashboard() {
 
     setPersonSearchLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/company/person?email=${encodeURIComponent(value)}${currentRecipient.name ? `&name=${encodeURIComponent(currentRecipient.name)}` : ''}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/company/person?email=${encodeURIComponent(value)}${currentRecipient.name ? `&name=${encodeURIComponent(currentRecipient.name)}` : ''}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -228,7 +228,7 @@ export default function Dashboard() {
 
     setPersonSearchLoading(true);
     try {
-      const response = await fetch(`http://localhost:3001/api/company/person?name=${encodeURIComponent(value)}${currentRecipient.email ? `&email=${encodeURIComponent(currentRecipient.email)}` : ''}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/company/person?name=${encodeURIComponent(value)}${currentRecipient.email ? `&email=${encodeURIComponent(currentRecipient.email)}` : ''}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -254,7 +254,7 @@ export default function Dashboard() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:3001/api/campaigns', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -288,7 +288,7 @@ export default function Dashboard() {
 
   const handleDeleteCampaign = async (campaignId) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/campaigns/${campaignId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${campaignId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -308,7 +308,7 @@ export default function Dashboard() {
     
     try {
       setShowTestModal(true);
-      const response = await fetch(`http://localhost:3001/api/campaigns/${campaignId}/test`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/campaigns/${campaignId}/test`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

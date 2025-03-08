@@ -26,7 +26,7 @@ export default function Activity() {
 
     const fetchUserAndActivity = async () => {
       try {
-        const userRes = await fetch('http://localhost:3001/api/me', {
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -37,7 +37,7 @@ export default function Activity() {
           setUser(userData);
 
           // Fetch activities (endpoint to be implemented)
-          const activitiesRes = await fetch('http://localhost:3001/api/activities', {
+          const activitiesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/activities`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }

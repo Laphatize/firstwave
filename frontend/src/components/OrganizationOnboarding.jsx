@@ -21,7 +21,7 @@ export default function OrganizationOnboarding({ onOrganizationCreated }) {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/organizations', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organizations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ export default function OrganizationOnboarding({ onOrganizationCreated }) {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/organizations/join', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organizations/join`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -32,7 +32,7 @@ export default function Analytics() {
 
     const fetchUser = async () => {
       try {
-        const userRes = await fetch('http://localhost:3001/api/me', {
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

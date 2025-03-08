@@ -1,7 +1,3 @@
-
-
-
-
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -15,9 +11,7 @@ const app = express();
 
 // CORS Configuration
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://test.com'] // Replace with your production domain
-    : ['http://localhost:3000'], // Frontend development server
+  origin: '*', // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,

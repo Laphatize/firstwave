@@ -189,7 +189,7 @@ export default function Setup() {
 
     const fetchUser = async () => {
       try {
-        const userRes = await fetch('http://localhost:3001/api/me', {
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -220,7 +220,7 @@ export default function Setup() {
   const handleCreateOrg = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:3001/api/organizations', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organizations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -240,7 +240,7 @@ export default function Setup() {
   const handleJoinOrg = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:3001/api/organizations/join', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organizations/join`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -16,7 +16,7 @@ export default function RequireOrganization({ children }) {
 
     const fetchOrganizations = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/organizations', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organizations`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

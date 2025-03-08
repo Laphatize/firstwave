@@ -35,7 +35,7 @@ export default function Settings() {
 
     const fetchUserAndOrgs = async () => {
       try {
-        const userRes = await fetch('http://localhost:3001/api/me', {
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -46,7 +46,7 @@ export default function Settings() {
           setUser(userData);
 
           // Fetch organizations
-          const orgsRes = await fetch('http://localhost:3001/api/organizations', {
+          const orgsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organizations`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -78,7 +78,7 @@ export default function Settings() {
   const handleCreateOrg = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:3001/api/organizations', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/organizations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +105,7 @@ export default function Settings() {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/api/change-password', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

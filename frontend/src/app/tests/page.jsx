@@ -37,10 +37,12 @@ export default function TestSuites() {
 
     const fetchUserAndTests = async () => {
       try {
-        const userRes = await fetch('http://localhost:3001/api/me', {
+        const userRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me`, {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          
         });
 
         if (userRes.ok) {
@@ -48,10 +50,12 @@ export default function TestSuites() {
           setUser(userData);
 
           // Fetch tests
-          const testsRes = await fetch('http://localhost:3001/api/tests', {
+          const testsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tests`, {
             headers: {
-              'Authorization': `Bearer ${token}`
-            }
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            
           });
 
           if (testsRes.ok) {
@@ -80,12 +84,13 @@ export default function TestSuites() {
   const handleCreateTest = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:3001/api/tests', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
+        ,
         body: JSON.stringify(newTest)
       });
       
