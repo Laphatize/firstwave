@@ -185,9 +185,9 @@ export default function Settings() {
               <h1 className="text-base font-semibold leading-7 text-white">Settings</h1>
             </header>
 
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-white/5" key="settings-sections">
               {/* Profile section */}
-              <div className="px-4 py-6 sm:px-6 lg:px-8">
+              <div className="px-4 py-6 sm:px-6 lg:px-8" key="profile-section">
                 <div className="mx-auto">
                   <div className="space-y-12">
                     <div className="pb-12">
@@ -213,7 +213,7 @@ export default function Settings() {
                           </div>
                         </div>
 
-                        {/* New Password Change Section */}
+                        {/* Password Change Section */}
                         <div className="sm:col-span-4">
                           <label htmlFor="currentPassword" className="block text-sm font-medium leading-6 text-white">
                             Current Password
@@ -248,7 +248,7 @@ export default function Settings() {
 
                         <div className="sm:col-span-4">
                           <label htmlFor="confirmPassword" className="block text-sm font-medium leading-6 text-white">
-                            Confirm New Password
+                            Confirm Password
                           </label>
                           <div className="mt-2">
                             <input
@@ -263,16 +263,15 @@ export default function Settings() {
                         </div>
 
                         {passwordError && (
-                          <div className="mt-2 text-sm text-red-500">
-                            {passwordError}
+                          <div className="sm:col-span-4">
+                            <p className="text-sm text-red-500">{passwordError}</p>
                           </div>
                         )}
 
                         <div className="sm:col-span-4">
                           <button
-                            type="button"
                             onClick={handlePasswordChange}
-                            className="rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+                            className="rounded-md bg-red-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600"
                           >
                             Change Password
                           </button>
@@ -284,7 +283,7 @@ export default function Settings() {
               </div>
 
               {/* Organizations section */}
-              <div className="px-4 py-6 sm:px-6 lg:px-8">
+              <div className="px-4 py-6 sm:px-6 lg:px-8" key="organizations-section">
                 <div className="mx-auto">
                   <div className="space-y-12">
                     <div>
@@ -305,8 +304,8 @@ export default function Settings() {
                       </div>
 
                       <div className="mt-6 divide-y divide-white/5">
-                        {organizations.map((org) => (
-                          <div key={org.id} className="py-4">
+                        {organizations.map((org, index) => (
+                          <div key={`org-${org.id || index}-container`} className="py-4">
                             <div className="flex items-center gap-4">
                               <div className="h-12 w-12 flex items-center justify-center rounded-lg bg-red-500/10 text-red-500">
                                 <BuildingOfficeIcon className="h-6 w-6" />
@@ -325,7 +324,7 @@ export default function Settings() {
                         ))}
 
                         {organizations.length === 0 && (
-                          <div className="py-4 text-center">
+                          <div key="no-orgs" className="py-4 text-center">
                             <p className="text-sm text-neutral-400">No organizations yet</p>
                           </div>
                         )}
