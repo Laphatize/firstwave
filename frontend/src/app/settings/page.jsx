@@ -366,7 +366,7 @@ export default function Settings() {
                     type="text"
                     value={newOrg.name}
                     onChange={(e) => setNewOrg(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 bg-neutral-900/50 border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="text-white w-full px-3 py-2 bg-neutral-900/50 border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     placeholder="Enter organization name"
                     required
                   />
@@ -378,7 +378,7 @@ export default function Settings() {
                   <textarea
                     value={newOrg.description}
                     onChange={(e) => setNewOrg(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full px-3 py-2 bg-neutral-900/50 border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    className="text-white w-full px-3 py-2 bg-neutral-900/50 border border-neutral-700 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
                     rows="3"
                     placeholder="Enter organization description"
                   />
