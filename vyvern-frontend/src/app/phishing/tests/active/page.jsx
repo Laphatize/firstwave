@@ -30,7 +30,7 @@ const SORT_OPTIONS = {
 const STATUS_CONFIG = {
   'Pending Approval': { bg: 'bg-yellow-900', text: 'text-yellow-500' },
   'Queued': { bg: 'bg-yellow-100 dark:bg-yellow-900', text: 'text-yellow-800 dark:text-yellow-200' },
-  'Starting Soon': { bg: 'bg-blue-100 dark:bg-blue-900', text: 'text-blue-800 dark:text-blue-200' },
+  'Starting Soon': { bg: 'bg-red-100 dark:bg-red-900', text: 'text-red-800 dark:text-red-200' },
   'IN_PROGRESS': { bg: 'bg-purple-100 dark:bg-purple-900', text: 'text-purple-800 dark:text-purple-200' },
   'Live': { bg: 'bg-green-100 dark:bg-green-900', text: 'text-green-800 dark:text-green-200' },
   'FAILED': { bg: 'bg-red-100 dark:bg-red-900', text: 'text-red-800 dark:text-red-200' },

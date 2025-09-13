@@ -158,7 +158,7 @@ const PhishingTests = () => {
                             </label>
                             <input 
                                 type="text" 
-                                className="px-2 py-1 mt-1 block w-full rounded-md dark:border-neutral-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-600 dark:text-white"
+                                className="px-2 py-1 mt-1 block w-full rounded-md dark:border-neutral-700 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-neutral-900 dark:border-neutral-600 dark:text-white"
                                 placeholder="John Doe"
                             />
                         </div>
@@ -168,7 +168,7 @@ const PhishingTests = () => {
                             </label>
                             <input 
                                 type="email" 
-                                className="px-2 py-1 mt-1 block w-full rounded-md dark:border-neutral-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-600 dark:text-white"
+                                className="px-2 py-1 mt-1 block w-full rounded-md dark:border-neutral-700 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-neutral-900 dark:border-neutral-600 dark:text-white"
                                 placeholder="john.doe@company.com"
                             />
                         </div>
@@ -215,7 +215,7 @@ const PhishingTests = () => {
                                             type="text" 
                                             value={emp.name}
                                             onChange={(e) => handleEmployeeChange(index, 'name', e.target.value)}
-                                            className="px-2 py-1 w-full rounded-md dark:border-neutral-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-600 dark:text-white"
+                                            className="px-2 py-1 w-full rounded-md dark:border-neutral-700 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-neutral-900 dark:border-neutral-600 dark:text-white"
                                             placeholder="Employee Name"
                                         />
                                     </div>
@@ -224,7 +224,7 @@ const PhishingTests = () => {
                                             type="email" 
                                             value={emp.email}
                                             onChange={(e) => handleEmployeeChange(index, 'email', e.target.value)}
-                                            className="px-2 py-1 w-full rounded-md dark:border-neutral-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-600 dark:text-white"
+                                            className="px-2 py-1 w-full rounded-md dark:border-neutral-700 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-neutral-900 dark:border-neutral-600 dark:text-white"
                                             placeholder="Email"
                                         />
                                     </div>
@@ -316,7 +316,7 @@ const PhishingTests = () => {
                                                     type="text" 
                                                     value={emp.name}
                                                     readOnly
-                                                    className="px-2 py-1 w-full rounded-md dark:border-neutral-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-600 dark:text-white"
+                                                    className="px-2 py-1 w-full rounded-md dark:border-neutral-700 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-neutral-900 dark:border-neutral-600 dark:text-white"
                                                 />
                                             </div>
                                             <div className="flex-1">
@@ -324,7 +324,7 @@ const PhishingTests = () => {
                                                     type="email" 
                                                     value={emp.email}
                                                     readOnly
-                                                    className="px-2 py-1 w-full rounded-md dark:border-neutral-700 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-neutral-900 dark:border-neutral-600 dark:text-white"
+                                                    className="px-2 py-1 w-full rounded-md dark:border-neutral-700 shadow-sm focus:border-red-500 focus:ring-red-500 dark:bg-neutral-900 dark:border-neutral-600 dark:text-white"
                                                 />
                                             </div>
                                         </div>

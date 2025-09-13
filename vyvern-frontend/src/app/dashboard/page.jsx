@@ -101,7 +101,7 @@ const SecurityScoreCard = ({ score, change, nistScores, metrics }) => {
               </p>
               <div className="mt-1 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
                 <div
-                  className={`h-2 rounded-full bg-blue-500 transition-all duration-500 ease-in-out`}
+                  className={`h-2 rounded-full bg-red-500 transition-all duration-500 ease-in-out`}
                   style={{ width: `${nistScores.identify}%` }}
                 />
               </div>
@@ -173,7 +173,7 @@ const SecurityScoreCard = ({ score, change, nistScores, metrics }) => {
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 NIST Compliance
               </p>
-              <p className="text-2xl font-bold text-blue-500">
+              <p className="text-2xl font-bold text-red-500">
                 {metrics.nistCompliance}%
               </p>
             </div>
@@ -216,7 +216,7 @@ const ActivityTimeline = ({ activities }) => (
           <div
             className={`mt-1 w-2 h-2 rounded-full ${
               activity.type === "test"
-                ? "bg-blue-500"
+                ? "bg-red-500"
                 : activity.type === "training"
                   ? "bg-green-500"
                   : "bg-yellow-500"

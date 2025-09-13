@@ -31,9 +31,8 @@ const MainNavbar = () => {
             <Link href="../" aria-label="Home">
               <div className="flex">
                 <h1 className="text-xl text-white">
-                  <span className="text-white font-medium">
-                    Vyvern{" "}
-                    <span className="text-xs font-light">EARLY ALPHA</span>
+                  <span className="text-white font-light">
+                    <img src="../../../trans_logo.png" className='w-24 bg-transparent text-white' />
                   </span>
                 </h1>
               </div>
@@ -45,7 +44,7 @@ const MainNavbar = () => {
             <Link className=" text-white text-sm" href="/login">
               Login
             </Link>
-            <Button href="login" className=" " color="red">
+            <Button href="login" className=" " color="white">
               <span>
                 Get started <span className="hidden lg:inline">today</span>
               </span>

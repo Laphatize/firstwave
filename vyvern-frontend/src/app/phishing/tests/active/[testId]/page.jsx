@@ -173,13 +173,13 @@ const TestDetails = () => {
     
     const messageStyles = {
       Agent: 'border-yellow-500/20 bg-yellow-500/5 hover:bg-yellow-500/10',
-      'Function Runner': 'border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10',
+      'Function Runner': 'border-red-500/20 bg-red-500/5 hover:bg-red-500/10',
       System: isError ? 'border-red-500/20 bg-red-500/5 hover:bg-red-500/10' : 'border-neutral-500/20 bg-neutral-500/5 hover:bg-neutral-500/10'
     };
 
     const roleColors = {
       Agent: 'text-yellow-500',
-      'Function Runner': 'text-blue-500',
+      'Function Runner': 'text-red-500',
       System: isError ? 'text-red-500' : 'text-neutral-400'
     };
 
@@ -421,33 +421,14 @@ const TestDetails = () => {
                 <div className='mt-4 bg-neutral-800/50 backdrop-blur-sm col-span-2 rounded-lg border border-neutral-700/50 p-8'>
                   <div className='flex items-center gap-2'>
                     <div className='w-3 h-3 rounded-full bg-green-500/80'></div>
-                    <p className='text-sm text-neutral-400'>Execution Progress</p>
+                    <p className='text-sm text-neutral-400'>Live Status</p>
 
 
 
                     </div>
-                    <div className='grid grid-cols-4 gap-2'>
-                      <div className='w-full px-4 py-2 bg-neutral-700/30 rounded-lg mt-2'>
-                      <p className='text-sm text-neutral-400'>Step 1 <span className='text-neutral-500'>- 10:20 AM 12/28/2024</span></p>
-                          <h1 className='text-lg text-neutral-400'>Created an attack plan</h1>
-                          <p className='text-sm text-neutral-400'>Took 30 seconds to complete</p>
-                      
+                    <div className='mt-4 text-white '>
+                      <h1>This test is still in progress.</h1>
                       </div>
-
-                      <div className='w-full px-4 py-2 bg-neutral-700/30 rounded-lg mt-2'>
-                      <p className='text-sm text-neutral-400'>Step 2 <span className='text-neutral-500'>- 10:21 AM 12/28/2024</span></p>
-                          <h1 className='text-lg text-neutral-400'>Ensuring ethics of plan</h1>
-                          <p className='text-sm text-neutral-400'>Took 1 minute to complete</p>
-                        
-                      </div>
-
-                      <div className='w-full px-4 py-2 bg-red-700/30 rounded-lg mt-2'>
-                      <p className='text-sm text-neutral-400'>Step 3 <span className='text-neutral-500'>- 10:23 AM 12/28/2024</span></p>
-                          <h1 className='text-lg text-neutral-400 truncate'>Learning about CTFGuide Corporation</h1>
-                          <p className='text-sm text-neutral-400'>In progress</p>
-                       
-                      </div>
-                  </div>
                 </div>
 
 
