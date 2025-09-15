@@ -60,7 +60,7 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   
   // Recover any in-progress attacks
-  await recoverInProgressAttacks();
+  //await recoverInProgressAttacks();
   
   // Start queue processor
   await queueProcessor.start();
@@ -90,4 +90,3 @@ global.wss.on('connection', (ws, req) => {
     console.log(`Client disconnected from test ${testId}`);
   });
 });
-

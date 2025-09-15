@@ -1,18 +1,29 @@
-const puppeteer = require("puppeteer");
-const CDP = require("chrome-remote-interface");
-const OpenAI = require("openai");
-const WebSocket = require("ws");
+const puppeteer = require('puppeteer');
+const WebSocket = require('ws');
+const OpenAI = require('openai');
+
 let LinkedInResearchAgent = null;
-(async () => {
-  const { LinkedInClient } = await import('linkedin-api-fetch');
-  LinkedInResearchAgent = new LinkedInClient({
-    email: process.env.LINKEDIN_USERNAME,
-    password: process.env.LINKEDIN_PASSWORD,
-  });
-  console.log("LinkedInResearchAgent initialized");
-  console.log(process.env.LINKEDIN_USERNAME);
-  console.log(process.env.LINKEDIN_PASSWORD);
-})().catch(console.error);
+
+async function initializeLinkedIn() {
+  try {
+    // Dynamic import of the LinkedIn client
+    const { LinkedInClient } = await import('linkedin-api-fetch');
+    
+    LinkedInResearchAgent = new LinkedInClient({
+      email: process.env.LINKEDIN_USERNAME,
+      password: process.env.LINKEDIN_PASSWORD,
+      throttle: false
+    });
+
+    await LinkedInResearchAgent.ensureAuthenticated();
+    console.log("LinkedInResearchAgent initialized and authenticated");
+    return true;
+  } catch (error) {
+    console.error("Error initializing LinkedInResearchAgent:", error);
+    return false;
+  }
+}
+
 class Attack {
   constructor(
     testId,
@@ -151,7 +162,7 @@ class Attack {
       console.log("Starting browser initialization...");
 
       this.browser = await puppeteer.launch({
-        headless: true,
+        headless: false,
         defaultViewport: {
           width: 1280,
           height: 720,
@@ -517,29 +528,108 @@ class Attack {
   }
 
   async executeAPILevelAttack() {
-    // this is just using api calls as opposed to browser agent
+    if (this.isExecuting) {
+      await this.logMessage(
+        "System",
+        "Attack already in progress, please wait...",
+        "warning"
+      );
+      return;
+    }
+
+    this.isExecuting = true;
+    
     try {
-      // get the company data from the research data
+      // Initialize if needed
+      if (!LinkedInResearchAgent) {
+        await this.logMessage(
+          "Function Runner",
+          "Initializing LinkedIn client...",
+          "info"
+        );
+        
+        const initialized = await initializeLinkedIn();
+        if (!initialized) {
+          throw new Error("Failed to initialize LinkedIn client");
+        }
+      }
+
       let companyName = this.companyContext.name;
-      let companyDomain = this.companyContext.domain;
-      let companyIndustry = this.companyContext.industry;
-      let companySize = this.companyContext.size;
-      let companyLocation = this.companyContext.location;
-   
+      
+      await this.logMessage(
+        "Function Runner", 
+        `Searching for company: ${companyName}`,
+        "info"
+      );
 
-      // LinkedInResearchAgent
-     // const user = await linkedin.getProfile('fisch2')
-     const company = await LinkedInResearchAgent.getCompany(companyName)
-     await this.logMessage("Function Runner", "Company data retrieved from LinkedIn API", "info");
-     await this.logMessage("Function Runner", JSON.stringify(company), "info");
+      try {
+        // Add delay between requests (random 1-5 seconds)
+        const delay = Math.floor(Math.random() * 4000) + 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
 
-    } catch(error) {
+        // Use the proper method from the library
+        const company = await LinkedInResearchAgent.getCompany(companyName);
+        
+        if (!company) {
+          throw new Error('No company data found');
+        }
+
+        // Store the research data
+        this.researchData = {
+          companyInfo: company,
+          retrievedAt: new Date().toISOString()
+        };
+
+        await this.logMessage(
+          "Function Runner",
+          "Successfully retrieved company data",
+          "info"
+        );
+
+        // Log relevant company details with safe access
+        const companyDetails = {
+          name: company?.name || 'Unknown',
+          industry: company?.industry || 'Unknown',
+          description: company?.description || 'No description available',
+          employeeCount: company?.employeeCount || 'Unknown',
+          headquarters: company?.headquarters || 'Unknown'
+        };
+
+        await this.logMessage(
+          "Function Runner",
+          `Company Details: ${JSON.stringify(companyDetails, null, 2)}`,
+          "info"
+        );
+
+      } catch (apiError) {
+        // Check for specific error types
+        if (apiError.message?.includes('CHALLENGE')) {
+          await this.logMessage(
+            "System",
+            "LinkedIn requires manual verification. Please log in through a browser first.",
+            "error"
+          );
+        } else if (apiError.response?.status === 401) {
+          await this.logMessage(
+            "System",
+            "Authentication failed. Please verify credentials and try logging in through a browser.",
+            "error"
+          );
+        }
+        throw apiError;
+      }
+
+    } catch (error) {
       console.error("Error in executeAPILevelAttack:", error);
       await this.logMessage(
         "System",
         `API level attack error: ${error.message}`,
-        "error",
+        "error"
       );
+      
+      await this.updateQueueStatus("FAILED");
+    } finally {
+      this.isExecuting = false;
     }
   }
 
@@ -860,6 +950,18 @@ class Attack {
 
   async fullRestart() {
     try {
+      // Check if already executing
+      if (this.isExecuting) {
+        await this.logMessage(
+          "System",
+          "Attack already in progress, please wait...",
+          "warning"
+        );
+        return;
+      }
+
+      this.isExecuting = true;
+
       // Reset all state except browser session
       this.currentStep = null;
       this.recoveryPoint = null;
